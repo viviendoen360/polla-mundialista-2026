@@ -25,7 +25,6 @@ MATCHES_FILE = os.path.join(DB_DIR, "matches.json")
 SETTINGS_FILE = os.path.join(DB_DIR, "settings.json")
 SPECIAL_PREDS_FILE = os.path.join(DB_DIR, "special_preds.json")
 
-# Fechas límite (quemadas para el ejemplo, pero editables por admin)
 DEADLINE_FASE_GRUPOS = datetime(2026, 6, 10, 23, 59)
 DEADLINE_OCTAVOS = datetime(2026, 6, 27, 23, 59)
 
@@ -36,35 +35,110 @@ def init_db():
     if not os.path.exists(DB_DIR):
         os.makedirs(DB_DIR)
     
-    # Usuarios
     if not os.path.exists(USERS_FILE):
         with open(USERS_FILE, 'w') as f:
             admin_pwd = hash_password("admin123")
             json.dump({"admin@polla.com": {"nombre": "Xavier Admin", "pwd": admin_pwd, "grupo": "Admin", "pais": "Ecuador", "rol": "admin"}}, f)
     
-    # Pronósticos y Especiales
     if not os.path.exists(PREDICTIONS_FILE):
         with open(PREDICTIONS_FILE, 'w') as f: json.dump({}, f)
 
     if not os.path.exists(SPECIAL_PREDS_FILE):
         with open(SPECIAL_PREDS_FILE, 'w') as f: json.dump({}, f)
             
-    # Partidos (Estructura expandida con todos los grupos)
     if not os.path.exists(MATCHES_FILE):
         with open(MATCHES_FILE, 'w') as f:
             initial_matches = {
                 "fase_grupos": [
-                    {"id": "G1", "grupo": "Grupo A", "equipo1": "Ecuador", "equipo2": "Qatar", "fecha": "2026-06-11 10:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G2", "grupo": "Grupo A", "equipo1": "Países Bajos", "equipo2": "Senegal", "fecha": "2026-06-11 15:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G3", "grupo": "Grupo B", "equipo1": "EEUU", "equipo2": "Gales", "fecha": "2026-06-12 10:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G4", "grupo": "Grupo B", "equipo1": "Inglaterra", "equipo2": "Irán", "fecha": "2026-06-12 15:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G5", "grupo": "Grupo C", "equipo1": "Argentina", "equipo2": "Arabia Saudita", "fecha": "2026-06-13 10:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G6", "grupo": "Grupo C", "equipo1": "México", "equipo2": "Polonia", "fecha": "2026-06-13 15:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G7", "grupo": "Grupo D", "equipo1": "Francia", "equipo2": "Australia", "fecha": "2026-06-14 10:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G8", "grupo": "Grupo E", "equipo1": "España", "equipo2": "Costa Rica", "fecha": "2026-06-15 10:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G9", "grupo": "Grupo F", "equipo1": "Bélgica", "equipo2": "Canadá", "fecha": "2026-06-16 10:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G10", "grupo": "Grupo G", "equipo1": "Brasil", "equipo2": "Serbia", "fecha": "2026-06-17 10:00", "goles1": None, "goles2": None, "jugado": False},
-                    {"id": "G11", "grupo": "Grupo H", "equipo1": "Portugal", "equipo2": "Uruguay", "fecha": "2026-06-18 10:00", "goles1": None, "goles2": None, "jugado": False}
+                    # FECHA 1: 11 JUNIO
+                    {"id": "G1", "grupo": "Grupo A", "equipo1": "México", "equipo2": "Sudáfrica", "fecha": "2026-06-11 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G2", "grupo": "Grupo A", "equipo1": "República de Corea", "equipo2": "República Checa", "fecha": "2026-06-11 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 2: 12 JUNIO
+                    {"id": "G3", "grupo": "Grupo B", "equipo1": "Canadá", "equipo2": "Bosnia y Herzegovina", "fecha": "2026-06-12 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G4", "grupo": "Grupo D", "equipo1": "Estados Unidos", "equipo2": "Paraguay", "fecha": "2026-06-12 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 3: 13 JUNIO
+                    {"id": "G5", "grupo": "Grupo B", "equipo1": "Catar", "equipo2": "Suiza", "fecha": "2026-06-13 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G6", "grupo": "Grupo C", "equipo1": "Brasil", "equipo2": "Marruecos", "fecha": "2026-06-13 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G7", "grupo": "Grupo C", "equipo1": "Haití", "equipo2": "Escocia", "fecha": "2026-06-13 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G8", "grupo": "Grupo D", "equipo1": "Australia", "equipo2": "Turquía", "fecha": "2026-06-14 00:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 4: 14 JUNIO
+                    {"id": "G9", "grupo": "Grupo E", "equipo1": "Alemania", "equipo2": "Curazao", "fecha": "2026-06-14 13:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G10", "grupo": "Grupo F", "equipo1": "Países Bajos", "equipo2": "Japón", "fecha": "2026-06-14 16:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G11", "grupo": "Grupo E", "equipo1": "Costa de Marfil", "equipo2": "Ecuador", "fecha": "2026-06-14 19:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G12", "grupo": "Grupo F", "equipo1": "Suecia", "equipo2": "Túnez", "fecha": "2026-06-14 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 5: 15 JUNIO
+                    {"id": "G13", "grupo": "Grupo H", "equipo1": "España", "equipo2": "Cabo Verde", "fecha": "2026-06-15 12:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G14", "grupo": "Grupo G", "equipo1": "Bélgica", "equipo2": "Egipto", "fecha": "2026-06-15 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G15", "grupo": "Grupo H", "equipo1": "Arabia Saudí", "equipo2": "Uruguay", "fecha": "2026-06-15 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G16", "grupo": "Grupo G", "equipo1": "RI de Irán", "equipo2": "Nueva Zelanda", "fecha": "2026-06-15 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 6: 16 JUNIO
+                    {"id": "G17", "grupo": "Grupo I", "equipo1": "Francia", "equipo2": "Senegal", "fecha": "2026-06-16 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G18", "grupo": "Grupo I", "equipo1": "Irak", "equipo2": "Noruega", "fecha": "2026-06-16 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G19", "grupo": "Grupo J", "equipo1": "Argentina", "equipo2": "Argelia", "fecha": "2026-06-16 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G20", "grupo": "Grupo J", "equipo1": "Austria", "equipo2": "Jordania", "fecha": "2026-06-17 00:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 7: 17 JUNIO
+                    {"id": "G21", "grupo": "Grupo K", "equipo1": "Portugal", "equipo2": "RD Congo", "fecha": "2026-06-17 13:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G22", "grupo": "Grupo L", "equipo1": "Inglaterra", "equipo2": "Croacia", "fecha": "2026-06-17 16:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G23", "grupo": "Grupo L", "equipo1": "Ghana", "equipo2": "Panamá", "fecha": "2026-06-17 19:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G24", "grupo": "Grupo K", "equipo1": "Uzbekistán", "equipo2": "Colombia", "fecha": "2026-06-17 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 8: 18 JUNIO
+                    {"id": "G25", "grupo": "Grupo A", "equipo1": "República Checa", "equipo2": "Sudáfrica", "fecha": "2026-06-18 12:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G26", "grupo": "Grupo B", "equipo1": "Suiza", "equipo2": "Bosnia y Herzegovina", "fecha": "2026-06-18 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G27", "grupo": "Grupo B", "equipo1": "Canadá", "equipo2": "Catar", "fecha": "2026-06-18 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G28", "grupo": "Grupo A", "equipo1": "México", "equipo2": "República de Corea", "fecha": "2026-06-18 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 9: 19 JUNIO
+                    {"id": "G29", "grupo": "Grupo D", "equipo1": "Estados Unidos", "equipo2": "Australia", "fecha": "2026-06-19 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G30", "grupo": "Grupo C", "equipo1": "Escocia", "equipo2": "Marruecos", "fecha": "2026-06-19 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G31", "grupo": "Grupo C", "equipo1": "Brasil", "equipo2": "Haití", "fecha": "2026-06-19 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G32", "grupo": "Grupo D", "equipo1": "Turquía", "equipo2": "Paraguay", "fecha": "2026-06-20 00:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 10: 20 JUNIO
+                    {"id": "G33", "grupo": "Grupo F", "equipo1": "Países Bajos", "equipo2": "Suecia", "fecha": "2026-06-20 13:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G34", "grupo": "Grupo E", "equipo1": "Alemania", "equipo2": "Costa de Marfil", "fecha": "2026-06-20 16:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G35", "grupo": "Grupo E", "equipo1": "Ecuador", "equipo2": "Curazao", "fecha": "2026-06-20 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G36", "grupo": "Grupo F", "equipo1": "Túnez", "equipo2": "Japón", "fecha": "2026-06-21 00:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 11: 21 JUNIO
+                    {"id": "G37", "grupo": "Grupo H", "equipo1": "España", "equipo2": "Arabia Saudí", "fecha": "2026-06-21 12:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G38", "grupo": "Grupo G", "equipo1": "Bélgica", "equipo2": "Irán", "fecha": "2026-06-21 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G39", "grupo": "Grupo H", "equipo1": "Uruguay", "equipo2": "Cabo Verde", "fecha": "2026-06-21 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G40", "grupo": "Grupo G", "equipo1": "Nueva Zelanda", "equipo2": "Egipto", "fecha": "2026-06-21 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 12: 22 JUNIO
+                    {"id": "G41", "grupo": "Grupo J", "equipo1": "Argentina", "equipo2": "Austria", "fecha": "2026-06-22 13:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G42", "grupo": "Grupo I", "equipo1": "Francia", "equipo2": "Irak", "fecha": "2026-06-22 17:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G43", "grupo": "Grupo I", "equipo1": "Noruega", "equipo2": "Senegal", "fecha": "2026-06-22 20:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G44", "grupo": "Grupo J", "equipo1": "Jordania", "equipo2": "Argelia", "fecha": "2026-06-22 23:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 13: 23 JUNIO
+                    {"id": "G45", "grupo": "Grupo K", "equipo1": "Portugal", "equipo2": "Uzbekistán", "fecha": "2026-06-23 13:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G46", "grupo": "Grupo L", "equipo1": "Inglaterra", "equipo2": "Ghana", "fecha": "2026-06-23 16:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G47", "grupo": "Grupo L", "equipo1": "Panamá", "equipo2": "Croacia", "fecha": "2026-06-23 19:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G48", "grupo": "Grupo K", "equipo1": "Colombia", "equipo2": "RD Congo", "fecha": "2026-06-23 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 14: 24 JUNIO
+                    {"id": "G49", "grupo": "Grupo B", "equipo1": "Suiza", "equipo2": "Canadá", "fecha": "2026-06-24 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G50", "grupo": "Grupo B", "equipo1": "Bosnia y Herzegovina", "equipo2": "Catar", "fecha": "2026-06-24 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G51", "grupo": "Grupo C", "equipo1": "Escocia", "equipo2": "Brasil", "fecha": "2026-06-24 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G52", "grupo": "Grupo C", "equipo1": "Marruecos", "equipo2": "Haití", "fecha": "2026-06-24 18:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G53", "grupo": "Grupo A", "equipo1": "República Checa", "equipo2": "México", "fecha": "2026-06-24 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G54", "grupo": "Grupo A", "equipo1": "Sudáfrica", "equipo2": "República de Corea", "fecha": "2026-06-24 21:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 15: 25 JUNIO
+                    {"id": "G55", "grupo": "Grupo E", "equipo1": "Curazao", "equipo2": "Costa de Marfil", "fecha": "2026-06-25 16:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G56", "grupo": "Grupo E", "equipo1": "Ecuador", "equipo2": "Alemania", "fecha": "2026-06-25 16:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G57", "grupo": "Grupo F", "equipo1": "Japón", "equipo2": "Suecia", "fecha": "2026-06-25 19:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G58", "grupo": "Grupo F", "equipo1": "Túnez", "equipo2": "Países Bajos", "fecha": "2026-06-25 19:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G59", "grupo": "Grupo D", "equipo1": "Turquía", "equipo2": "Estados Unidos", "fecha": "2026-06-25 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G60", "grupo": "Grupo D", "equipo1": "Paraguay", "equipo2": "Australia", "fecha": "2026-06-25 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 16: 26 JUNIO
+                    {"id": "G61", "grupo": "Grupo I", "equipo1": "Noruega", "equipo2": "Francia", "fecha": "2026-06-26 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G62", "grupo": "Grupo I", "equipo1": "Senegal", "equipo2": "Irak", "fecha": "2026-06-26 15:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G63", "grupo": "Grupo H", "equipo1": "Cabo Verde", "equipo2": "Arabia Saudí", "fecha": "2026-06-26 20:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G64", "grupo": "Grupo H", "equipo1": "Uruguay", "equipo2": "España", "fecha": "2026-06-26 20:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G65", "grupo": "Grupo G", "equipo1": "Egipto", "equipo2": "Irán", "fecha": "2026-06-26 23:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G66", "grupo": "Grupo G", "equipo1": "Nueva Zelanda", "equipo2": "Bélgica", "fecha": "2026-06-26 23:00", "goles1": None, "goles2": None, "jugado": False},
+                    # FECHA 17: 27 JUNIO
+                    {"id": "G67", "grupo": "Grupo L", "equipo1": "Panamá", "equipo2": "Inglaterra", "fecha": "2026-06-27 17:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G68", "grupo": "Grupo L", "equipo1": "Croacia", "equipo2": "Ghana", "fecha": "2026-06-27 17:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G69", "grupo": "Grupo K", "equipo1": "Colombia", "equipo2": "Portugal", "fecha": "2026-06-27 19:30", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G70", "grupo": "Grupo K", "equipo1": "RD Congo", "equipo2": "Uzbekistán", "fecha": "2026-06-27 19:30", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G71", "grupo": "Grupo J", "equipo1": "Argelia", "equipo2": "Austria", "fecha": "2026-06-27 22:00", "goles1": None, "goles2": None, "jugado": False},
+                    {"id": "G72", "grupo": "Grupo J", "equipo1": "Jordania", "equipo2": "Argentina", "fecha": "2026-06-27 22:00", "goles1": None, "goles2": None, "jugado": False}
                 ],
                 "octavos": [
                     {"id": "O1", "grupo": "Octavos", "equipo1": "Por Definir A1", "equipo2": "Por Definir B2", "fecha": "2026-06-28 15:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
@@ -97,25 +171,23 @@ def determinar_ganador(goles1, goles2):
     elif goles2 > goles1: return "equipo2"
     else: return "empate"
 
-# Modificado para recibir pred_ganador de forma explícita
-def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, real_goles1, real_goles2):
+# ACTUALIZADO: Cálculo estricto de puntos
+def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, real_goles1, real_goles2, real_ganador):
     puntos = 0
-    if real_goles1 is None or real_goles2 is None:
+    if real_goles1 is None or real_goles2 is None or real_ganador is None:
         return 0
 
-    # El ganador real SIEMPRE se basa en los goles oficiales
-    real_ganador = determinar_ganador(real_goles1, real_goles2)
-
-    # 1. Acierto de Ganador/Empate explícito (1 punto)
+    # 1. Acierto de Tendencia Oficial / Ganador/Empate explícito (1 punto)
     if pred_ganador == real_ganador:
         puntos += 1
 
-    # 2. Acierto de Goles exactos por equipo (1 punto cada uno)
+    # 2. Acierto de Goles exactos por equipo (1 punto cada uno, máx 2)
     if pred_goles1 == real_goles1: puntos += 1
     if pred_goles2 == real_goles2: puntos += 1
 
-    # 3. Marcador Exacto (Bono de 2 puntos si acertó todo)
-    if pred_goles1 == real_goles1 and pred_goles2 == real_goles2:
+    # 3. Marcador Exacto (Bono de 2 puntos SOLO si acertó absolutamente todo)
+    # Esto asegura que dé 5 puntos solo si Goles1, Goles2 y Tendencia son correctos.
+    if pred_goles1 == real_goles1 and pred_goles2 == real_goles2 and pred_ganador == real_ganador:
         puntos += 2
 
     return puntos
@@ -307,11 +379,12 @@ def mostrar_tabla_posiciones():
                     if p["jugado"]:
                         m_id = p["id"]
                         if m_id in user_preds:
-                            # Soporte para app vieja (si no tiene ganador explícito guardado, lo calcula)
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
+                            real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
+                            
                             pts = calcular_puntos_partido(
                                 user_preds[m_id]["goles1"], user_preds[m_id]["goles2"], pred_g,
-                                p["goles1"], p["goles2"]
+                                p["goles1"], p["goles2"], real_g
                             )
                             puntos_totales += pts
             
@@ -382,9 +455,11 @@ def admin_ver_tablas():
                         m_id = p["id"]
                         if m_id in user_preds:
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
+                            real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
+                            
                             pts = calcular_puntos_partido(
                                 user_preds[m_id]["goles1"], user_preds[m_id]["goles2"], pred_g,
-                                p["goles1"], p["goles2"]
+                                p["goles1"], p["goles2"], real_g
                             )
                             puntos_totales += pts
             
@@ -410,7 +485,7 @@ def admin_ver_tablas():
 
 def admin_sandbox_resultados():
     st.header("🛠️ Sandbox: Ingresar Resultados Reales")
-    st.write("Ingresa los resultados oficiales para calcular los puntos de todos.")
+    st.write("Ingresa los resultados OFICIALES para calcular los puntos de todos.")
     
     matches = load_data(MATCHES_FILE)
     fase_sel = st.selectbox("Seleccionar Fase", list(matches.keys()))
@@ -429,10 +504,23 @@ def admin_sandbox_resultados():
                 if fase_sel != "fase_grupos":
                     clasifica = st.selectbox("Clasifica", ["Ninguno", p['equipo1'], p['equipo2']], key=f"clasif_{m_id}")
                     p["clasifica"] = clasifica if clasifica != "Ninguno" else None
+
+            # AÑADIDO: Ahora el Admin (Sandbox) también elige explícitamente quién gana
+            opciones_txt = [f"Gana {p['equipo1']}", "Empate", f"Gana {p['equipo2']}"]
+            opciones_val = ["equipo1", "empate", "equipo2"]
             
+            # Valor por defecto basado en los goles si es la primera vez
+            default_real = determinar_ganador(p.get("goles1"), p.get("goles2")) if p.get("goles1") is not None else "empate"
+            prev_ganador_real = p.get("ganador_real", default_real)
+            idx_ganador = opciones_val.index(prev_ganador_real) if prev_ganador_real in opciones_val else 1
+            
+            ganador_ui = st.radio("Tendencia final OFICIAL:", opciones_txt, index=idx_ganador, key=f"real_rad_{m_id}", horizontal=True)
+            ganador_real = opciones_val[opciones_txt.index(ganador_ui)]
+
             p["goles1"] = g1 if jugado else None
             p["goles2"] = g2 if jugado else None
             p["jugado"] = jugado
+            p["ganador_real"] = ganador_real
             st.divider()
 
         if st.form_submit_button("Guardar Resultados Oficiales", type="primary"):
@@ -465,11 +553,11 @@ def admin_gestion_fases():
     
     st.divider()
     st.subheader("Zona de Peligro")
-    if st.button("⚠️ Restaurar Partidos de Prueba (Cargar Grupos A-H)"):
+    if st.button("⚠️ Restaurar Partidos de Prueba (Cargar Calendario Oficial de 72 Partidos)"):
         if os.path.exists(MATCHES_FILE):
             os.remove(MATCHES_FILE)
-        init_db() # Fuerza a crear el archivo con todos los partidos nuevos
-        st.success("Partidos reiniciados exitosamente.")
+        init_db() 
+        st.success("Calendario de 72 partidos de fase de grupos reiniciado exitosamente.")
         st.rerun()
 
 def admin_sincronizar_api():
