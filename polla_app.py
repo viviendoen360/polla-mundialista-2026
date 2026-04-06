@@ -25,8 +25,22 @@ MATCHES_FILE = os.path.join(DB_DIR, "matches.json")
 SETTINGS_FILE = os.path.join(DB_DIR, "settings.json")
 SPECIAL_PREDS_FILE = os.path.join(DB_DIR, "special_preds.json")
 
-DEADLINE_FASE_GRUPOS = datetime(2026, 6, 10, 23, 59)
-DEADLINE_OCTAVOS = datetime(2026, 6, 27, 23, 59)
+# Fechas límite dinámicas por fase
+DEADLINES = {
+    "fase_grupos": datetime(2026, 6, 10, 23, 59),
+    "octavos": datetime(2026, 6, 27, 23, 59),
+    "cuartos": datetime(2026, 7, 8, 23, 59),   # Fechas estimadas, modificables
+    "semis": datetime(2026, 7, 13, 23, 59),
+    "final": datetime(2026, 7, 18, 23, 59)
+}
+
+FASES_NOMBRES = {
+    "fase_grupos": "Fase de Grupos",
+    "octavos": "Octavos de Final",
+    "cuartos": "Cuartos de Final",
+    "semis": "Semifinales",
+    "final": "Gran Final"
+}
 
 # ==========================================
 # FUNCIONES DE BASE DE DATOS LOCAL (JSON)
@@ -141,7 +155,16 @@ def init_db():
                     {"id": "G72", "grupo": "Grupo J", "equipo1": "Jordania", "equipo2": "Argentina", "fecha": "2026-06-27 22:00", "goles1": None, "goles2": None, "jugado": False}
                 ],
                 "octavos": [
-                    {"id": "O1", "grupo": "Octavos", "equipo1": "Por Definir A1", "equipo2": "Por Definir B2", "fecha": "2026-06-28 15:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+                    {"id": f"O{i}", "grupo": "Octavos", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None} for i in range(1, 9)
+                ],
+                "cuartos": [
+                    {"id": f"C{i}", "grupo": "Cuartos", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-07-09", "goles1": None, "goles2": None, "jugado": False, "clasifica": None} for i in range(1, 5)
+                ],
+                "semis": [
+                    {"id": f"S{i}", "grupo": "Semifinales", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-07-14", "goles1": None, "goles2": None, "jugado": False, "clasifica": None} for i in range(1, 3)
+                ],
+                "final": [
+                    {"id": "F1", "grupo": "Final", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-07-19", "goles1": None, "goles2": None, "jugado": False, "campeon": None}
                 ]
             }
             json.dump(initial_matches, f)
@@ -262,32 +285,45 @@ def mostrar_pantalla_pronosticos():
     
     if user_email not in predictions: predictions[user_email] = {}
 
-    fase_activa = settings["fase_actual"]
-    ahora = datetime.now()
-    puede_editar = True
-    mensaje_cierre = ""
+    # NUEVO: Filtros de visualización para Usuarios
+    col_filtro1, col_filtro2 = st.columns(2)
     
-    if fase_activa == "fase_grupos":
-        if ahora > DEADLINE_FASE_GRUPOS:
-            puede_editar = False
-            mensaje_cierre = "La fase de grupos está CERRADA para edición."
+    with col_filtro1:
+        fase_por_defecto = settings.get("fase_actual", "fase_grupos")
+        idx_fase = list(FASES_NOMBRES.keys()).index(fase_por_defecto) if fase_por_defecto in FASES_NOMBRES else 0
+        fase_sel = st.selectbox("Fase del Torneo", list(FASES_NOMBRES.keys()), index=idx_fase, format_func=lambda x: FASES_NOMBRES[x])
+    
+    with col_filtro2:
+        if fase_sel == "fase_grupos":
+            lista_grupos = ["Todos"] + [f"Grupo {chr(i)}" for i in range(65, 77)] # Grupo A hasta Grupo L
+            grupo_filtro = st.selectbox("Sub-filtro: Grupo", lista_grupos)
         else:
-            mensaje_cierre = f"Se cierra el: {DEADLINE_FASE_GRUPOS.strftime('%Y-%m-%d %H:%M')}"
-    elif fase_activa == "octavos":
-         if ahora > DEADLINE_OCTAVOS:
-             puede_editar = False
-             mensaje_cierre = "La fase de Octavos está CERRADA para edición."
-         else:
-             mensaje_cierre = f"Se cierra el: {DEADLINE_OCTAVOS.strftime('%Y-%m-%d %H:%M')}"
+            grupo_filtro = "Todos"
+            st.selectbox("Sub-filtro: Grupo", ["Único"], disabled=True) # Placeholder deshabilitado
 
-    st.info(f"Fase actual: {fase_activa.replace('_', ' ').title()} | {mensaje_cierre}")
+    ahora = datetime.now()
+    deadline = DEADLINES.get(fase_sel, ahora + timedelta(days=1))
+    puede_editar = ahora <= deadline
+    
+    if puede_editar:
+        mensaje_cierre = f"Se cierra el: {deadline.strftime('%Y-%m-%d %H:%M')}"
+    else:
+        mensaje_cierre = f"La fase {FASES_NOMBRES[fase_sel]} está CERRADA para edición."
+
+    st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | {mensaje_cierre}")
 
     with st.form("form_pronosticos"):
-        st.subheader(f"Partidos - {fase_activa.replace('_', ' ').title()}")
+        st.subheader(f"Partidos")
         
-        partidos_fase = matches.get(fase_activa, [])
+        partidos_fase = matches.get(fase_sel, [])
+        if grupo_filtro != "Todos":
+            partidos_fase = [p for p in partidos_fase if p.get("grupo") == grupo_filtro]
+            
         nuevos_pronosticos = {}
         
+        if not partidos_fase:
+            st.write("No hay partidos en este grupo o fase.")
+            
         for p in partidos_fase:
             m_id = p["id"]
             st.markdown(f"**{p.get('grupo', '')}** | Fecha: {p['fecha']}")
@@ -306,7 +342,7 @@ def mostrar_pantalla_pronosticos():
             opciones_txt = [f"Gana {p['equipo1']}", "Empate", f"Gana {p['equipo2']}"]
             opciones_val = ["equipo1", "empate", "equipo2"]
             
-            # Buscar indice previo (default: empate si no hay, o calcular base a goles si era app vieja)
+            # Buscar indice previo
             prev_ganador = pred_prev.get("ganador", determinar_ganador(pred_prev.get("goles1",0), pred_prev.get("goles2",0)))
             idx_ganador = opciones_val.index(prev_ganador) if prev_ganador in opciones_val else 1
             
@@ -318,6 +354,7 @@ def mostrar_pantalla_pronosticos():
 
         if puede_editar:
             if st.form_submit_button("Guardar Pronósticos", type="primary"):
+                # .update() asegura que no borramos los datos de otros grupos que no estamos viendo
                 predictions[user_email].update(nuevos_pronosticos)
                 save_data(predictions, PREDICTIONS_FILE)
                 st.success("¡Pronósticos guardados correctamente!")
@@ -326,10 +363,10 @@ def mostrar_pantalla_pronosticos():
 
 def mostrar_predicciones_especiales():
     st.header("Predicciones Especiales (Bonos)")
-    st.write("Si aciertas al Campeón y Vicecampeón desde la Fase de Grupos, obtienes +5 pts por cada uno.")
+    st.write("Si aciertas al Campeón y Vicecampeón desde la Fase de Grupos, obtienes 20 pts y 15 pts respectivamente.")
     
     ahora = datetime.now()
-    puede_editar = ahora <= DEADLINE_FASE_GRUPOS
+    puede_editar = ahora <= DEADLINES["fase_grupos"]
     
     specials = load_data(SPECIAL_PREDS_FILE)
     user_email = st.session_state['user']
@@ -388,13 +425,13 @@ def mostrar_tabla_posiciones():
                             )
                             puntos_totales += pts
             
-            # Bonos Especiales
+            # Bonos Especiales: 20 por campeón, 15 por vicecampeón
             campeon_oficial = settings.get("campeon_oficial")
             vice_oficial = settings.get("vice_oficial")
             user_specials = specials.get(email, {})
             
-            if campeon_oficial and user_specials.get("campeon") == campeon_oficial: puntos_totales += 25
-            if vice_oficial and user_specials.get("vicecampeon") == vice_oficial: puntos_totales += 20
+            if campeon_oficial and user_specials.get("campeon") == campeon_oficial: puntos_totales += 20
+            if vice_oficial and user_specials.get("vicecampeon") == vice_oficial: puntos_totales += 15
 
             tabla_data.append({"Nombre": u_data["nombre"], "Puntos": puntos_totales})
 
@@ -467,8 +504,8 @@ def admin_ver_tablas():
             vice_oficial = settings.get("vice_oficial")
             user_specials = specials.get(email, {})
             
-            if campeon_oficial and user_specials.get("campeon") == campeon_oficial: puntos_totales += 25
-            if vice_oficial and user_specials.get("vicecampeon") == vice_oficial: puntos_totales += 20
+            if campeon_oficial and user_specials.get("campeon") == campeon_oficial: puntos_totales += 20
+            if vice_oficial and user_specials.get("vicecampeon") == vice_oficial: puntos_totales += 15
 
             tabla_data.append({
                 "Nombre": u_data["nombre"], 
@@ -488,9 +525,26 @@ def admin_sandbox_resultados():
     st.write("Ingresa los resultados OFICIALES para calcular los puntos de todos.")
     
     matches = load_data(MATCHES_FILE)
-    fase_sel = st.selectbox("Seleccionar Fase", list(matches.keys()))
-    partidos_fase = matches[fase_sel]
     
+    # NUEVO: Filtros de visualización para Administrador
+    col_filtro1, col_filtro2 = st.columns(2)
+    with col_filtro1:
+        fase_sel = st.selectbox("Fase del Torneo", list(FASES_NOMBRES.keys()), format_func=lambda x: FASES_NOMBRES[x])
+    with col_filtro2:
+        if fase_sel == "fase_grupos":
+            lista_grupos = ["Todos"] + [f"Grupo {chr(i)}" for i in range(65, 77)]
+            grupo_filtro = st.selectbox("Sub-filtro: Grupo", lista_grupos)
+        else:
+            grupo_filtro = "Todos"
+            st.selectbox("Sub-filtro: Grupo", ["Único"], disabled=True)
+
+    partidos_fase = matches.get(fase_sel, [])
+    if grupo_filtro != "Todos":
+        partidos_fase = [p for p in partidos_fase if p.get("grupo") == grupo_filtro]
+    
+    if not partidos_fase:
+        st.write("No hay partidos para mostrar en este filtro.")
+
     with st.form("form_sandbox"):
         for p in partidos_fase:
             m_id = p["id"]
@@ -505,11 +559,9 @@ def admin_sandbox_resultados():
                     clasifica = st.selectbox("Clasifica", ["Ninguno", p['equipo1'], p['equipo2']], key=f"clasif_{m_id}")
                     p["clasifica"] = clasifica if clasifica != "Ninguno" else None
 
-            # AÑADIDO: Ahora el Admin (Sandbox) también elige explícitamente quién gana
             opciones_txt = [f"Gana {p['equipo1']}", "Empate", f"Gana {p['equipo2']}"]
             opciones_val = ["equipo1", "empate", "equipo2"]
             
-            # Valor por defecto basado en los goles si es la primera vez
             default_real = determinar_ganador(p.get("goles1"), p.get("goles2")) if p.get("goles1") is not None else "empate"
             prev_ganador_real = p.get("ganador_real", default_real)
             idx_ganador = opciones_val.index(prev_ganador_real) if prev_ganador_real in opciones_val else 1
@@ -532,9 +584,10 @@ def admin_gestion_fases():
     settings = load_data(SETTINGS_FILE)
     
     with st.form("form_fases"):
-        nueva_fase = st.selectbox("Fase Activa (La que los usuarios pueden ver y pronosticar)", 
-                                 ["fase_grupos", "octavos", "cuartos", "semis", "final"],
-                                 index=["fase_grupos", "octavos", "cuartos", "semis", "final"].index(settings.get("fase_actual", "fase_grupos")))
+        nueva_fase = st.selectbox("Fase Activa Inicial por Defecto (Al abrir la app)", 
+                                 list(FASES_NOMBRES.keys()),
+                                 index=list(FASES_NOMBRES.keys()).index(settings.get("fase_actual", "fase_grupos")),
+                                 format_func=lambda x: FASES_NOMBRES[x])
         
         st.subheader("Declaración de Campeones (Al finalizar el mundial)")
         equipos = ["", "Argentina", "Brasil", "Francia", "Inglaterra", "España", "Alemania", "Ecuador", "EEUU", "Portugal"]
@@ -553,17 +606,17 @@ def admin_gestion_fases():
     
     st.divider()
     st.subheader("Zona de Peligro")
-    if st.button("⚠️ Restaurar Partidos de Prueba (Cargar Calendario Oficial de 72 Partidos)"):
+    if st.button("⚠️ Restaurar Partidos de Prueba (Cargar Calendario Oficial de 72 Partidos y Fases)"):
         if os.path.exists(MATCHES_FILE):
             os.remove(MATCHES_FILE)
         init_db() 
-        st.success("Calendario de 72 partidos de fase de grupos reiniciado exitosamente.")
+        st.success("Calendario Oficial restaurado exitosamente con todas las fases.")
         st.rerun()
 
 def admin_sincronizar_api():
     st.header("🔄 Sincronización Maestra (API)")
-    st.write("Este es el botón maestro para conectar con Football-Data.org o API-Football.")
-    st.info("Actualmente en modo de simulación. Al hacer clic, actualizaría los resultados automáticamente sin ingresarlos a mano en el Sandbox.")
+    st.write("Este es el botón maestro para conectar con una API externa en el futuro.")
+    st.info("Actualmente en modo de simulación. Al hacer clic, actualizaría los resultados automáticamente.")
     
     if st.button("🔥 Sincronizar Resultados FIFA AHORA", type="primary"):
         with st.spinner('Conectando a la API de Fútbol...'):
