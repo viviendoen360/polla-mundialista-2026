@@ -25,7 +25,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# CONSTANTES DE BASE DE DATOS
+# CONSTANTES DE BASE DE DATOS Y EQUIPOS
 # ==========================================
 SHEET_NAME = "Polla_DB_2026"
 DB_DIR = "db_polla"
@@ -36,10 +36,9 @@ DB_MATCHES = "matches"
 DB_SETTINGS = "settings"
 DB_SPECIALS = "special_preds"
 
-# Solo 2 ventanas de edición según lo solicitado
 DEADLINES = {
     "fase_grupos": datetime(2026, 6, 10, 23, 59),
-    "eliminatorias": datetime(2026, 6, 27, 23, 59) # Cierre maestro para Octavos, Cuartos, Semis y Final
+    "eliminatorias": datetime(2026, 6, 27, 23, 59) 
 }
 
 FASES_NOMBRES = {
@@ -49,6 +48,17 @@ FASES_NOMBRES = {
     "semis": "Semifinales",
     "final": "Gran Final"
 }
+
+EQUIPOS_MUNDIAL = sorted([
+    "Alemania", "Arabia Saudí", "Argelia", "Argentina", "Australia", "Austria",
+    "Bélgica", "Bosnia y Herzegovina", "Brasil", "Cabo Verde", "Canadá", "Catar",
+    "Colombia", "Costa de Marfil", "Croacia", "Curazao", "Ecuador", "Egipto",
+    "Escocia", "España", "Estados Unidos", "Francia", "Ghana", "Haití",
+    "Inglaterra", "Irak", "Japón", "Jordania", "Marruecos", "México",
+    "Noruega", "Nueva Zelanda", "Países Bajos", "Panamá", "Paraguay", "Portugal",
+    "RD Congo", "RI de Irán", "República Checa", "República de Corea", "Senegal",
+    "Sudáfrica", "Suecia", "Suiza", "Turquía", "Túnez", "Uruguay", "Uzbekistán"
+])
 
 # ==========================================
 # ADAPTADOR DE BASE DE DATOS (GSHEETS / LOCAL)
@@ -146,7 +156,6 @@ def save_data(data, key):
 # INICIALIZACIÓN DE DATOS Y BRACKET
 # ==========================================
 def get_initial_matches():
-    # El Bracket se estructura con 'origen1' y 'origen2' para anidar los ganadores en cascada
     return {
         "fase_grupos": [
             {"id": "G1", "grupo": "Grupo A", "equipo1": "México", "equipo2": "Sudáfrica", "fecha": "2026-06-11 15:00", "goles1": None, "goles2": None, "jugado": False},
@@ -223,14 +232,14 @@ def get_initial_matches():
             {"id": "G72", "grupo": "Grupo J", "equipo1": "Jordania", "equipo2": "Argentina", "fecha": "2026-06-27 22:00", "goles1": None, "goles2": None, "jugado": False}
         ],
         "octavos": [
-            {"id": "O1", "grupo": "Octavos 1", "equipo1": "1ro Grupo A", "equipo2": "2do Grupo B", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O2", "grupo": "Octavos 2", "equipo1": "1ro Grupo C", "equipo2": "2do Grupo D", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O3", "grupo": "Octavos 3", "equipo1": "1ro Grupo E", "equipo2": "2do Grupo F", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O4", "grupo": "Octavos 4", "equipo1": "1ro Grupo G", "equipo2": "2do Grupo H", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O5", "grupo": "Octavos 5", "equipo1": "1ro Grupo I", "equipo2": "2do Grupo J", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O6", "grupo": "Octavos 6", "equipo1": "1ro Grupo K", "equipo2": "2do Grupo L", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O7", "grupo": "Octavos 7", "equipo1": "Mejor 3ro 1", "equipo2": "Mejor 3ro 2", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O8", "grupo": "Octavos 8", "equipo1": "Mejor 3ro 3", "equipo2": "Mejor 3ro 4", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "O1", "grupo": "Octavos 1", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O2", "grupo": "Octavos 2", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O3", "grupo": "Octavos 3", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O4", "grupo": "Octavos 4", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O5", "grupo": "Octavos 5", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O6", "grupo": "Octavos 6", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O7", "grupo": "Octavos 7", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O8", "grupo": "Octavos 8", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "cuartos": [
             {"id": "C1", "grupo": "Cuartos 1", "origen1": "O1", "origen2": "O2", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
@@ -256,13 +265,20 @@ def init_db():
     if not load_data(DB_SPECIALS): save_data({}, DB_SPECIALS)
     
     if not load_data(DB_SETTINGS):
-        save_data({"fase_actual": "fase_grupos", "campeon_oficial": None, "vice_oficial": None}, DB_SETTINGS)
+        save_data({
+            "fase_actual": "fase_grupos", 
+            "campeon_oficial": None, 
+            "vice_oficial": None,
+            "octavos_oficial": [],
+            "cuartos_oficial": [],
+            "semis_oficial": []
+        }, DB_SETTINGS)
             
     if not load_data(DB_MATCHES):
         save_data(get_initial_matches(), DB_MATCHES)
 
 # ==========================================
-# UTILIDADES Y BRACKETOLOGY (ÁRBOL DINÁMICO)
+# UTILIDADES
 # ==========================================
 def hash_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
@@ -276,8 +292,7 @@ def determinar_ganador(goles1, goles2):
     elif goles2 > goles1: return "equipo2"
     else: return "empate"
 
-# Función maestra que "viaja en el tiempo" para ver quién ganó el partido anterior
-def resolve_team_name(match_data, slot, matches_dict, source_data, is_admin=False):
+def resolve_team_name(match_data, slot, matches_dict, is_admin=False):
     origen_id = match_data.get(f"origen{slot}")
     if not origen_id:
         return match_data.get(f"equipo{slot}", "Por Definir")
@@ -293,40 +308,25 @@ def resolve_team_name(match_data, slot, matches_dict, source_data, is_admin=Fals
     if not origin_match:
         return f"Ganador {origen_id}"
 
-    clasifica_slot = None
-    if is_admin:
-        clasifica_slot = origin_match.get("clasifica") # 'equipo1' o 'equipo2'
-    else:
-        if origen_id in source_data:
-            clasifica_slot = source_data[origen_id].get("clasifica")
+    clasifica_slot = origin_match.get("clasifica") if is_admin else None
     
     if clasifica_slot in ["equipo1", "equipo2"]:
         slot_num = 1 if clasifica_slot == "equipo1" else 2
-        return resolve_team_name(origin_match, slot_num, matches_dict, source_data, is_admin)
+        return resolve_team_name(origin_match, slot_num, matches_dict, is_admin)
     
     return f"Ganador {origen_id}"
 
-# Nueva lógica de puntuación para reflejar aciertos en los clasificados
-def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, pred_team_advancing, real_goles1, real_goles2, real_ganador, real_team_advancing, fase):
+def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, real_goles1, real_goles2, real_ganador):
     puntos = 0
     if real_goles1 is None or real_goles2 is None or real_ganador is None:
         return 0
 
-    # Puntos Base (Marcador 90 mins)
     if pred_ganador == real_ganador: puntos += 1
     if pred_goles1 == real_goles1: puntos += 1
     if pred_goles2 == real_goles2: puntos += 1
     if pred_goles1 == real_goles1 and pred_goles2 == real_goles2 and pred_ganador == real_ganador:
         puntos += 2
 
-    # Puntos por adivinar al Clasificado (Solo Eliminatorias)
-    if fase != "fase_grupos" and pred_team_advancing and real_team_advancing:
-        if pred_team_advancing == real_team_advancing and "Ganador" not in pred_team_advancing:
-            if fase == "octavos": puntos += 5
-            elif fase == "cuartos": puntos += 7
-            elif fase == "semis": puntos += 10
-            elif fase == "final": puntos += 10 # Extra por atinar al campeón del último partido
-            
     return puntos
 
 # ==========================================
@@ -388,14 +388,15 @@ def render_dashboard_usuario():
         st.session_state.clear()
         st.rerun()
 
-    menu = st.sidebar.radio("Navegación", ["Mis Pronósticos", "Tabla de Posiciones", "Predicciones Especiales"])
+    menu = st.sidebar.radio("Navegación", ["Mis Pronósticos (Partidos)", "Predicciones Especiales (Clasificados)", "Tabla de Posiciones"])
 
-    if menu == "Mis Pronósticos": mostrar_pantalla_pronosticos()
+    if menu == "Mis Pronósticos (Partidos)": mostrar_pantalla_pronosticos()
+    elif menu == "Predicciones Especiales (Clasificados)": mostrar_predicciones_especiales()
     elif menu == "Tabla de Posiciones": mostrar_tabla_posiciones()
-    elif menu == "Predicciones Especiales": mostrar_predicciones_especiales()
 
 def mostrar_pantalla_pronosticos():
-    st.header("Mis Pronósticos")
+    st.header("Mis Pronósticos (Partidos)")
+    st.write("Acierta los goles exactos y el ganador para sumar puntos base.")
     
     matches = load_data(DB_MATCHES)
     settings = load_data(DB_SETTINGS)
@@ -418,7 +419,6 @@ def mostrar_pantalla_pronosticos():
             grupo_filtro = "Todos"
             st.selectbox("Sub-filtro: Grupo", ["Único"], disabled=True)
 
-    # Lógica de cierre dual: Un reloj para grupos, un reloj para TODAS las eliminatorias
     ahora = datetime.now()
     deadline_key = "fase_grupos" if fase_sel == "fase_grupos" else "eliminatorias"
     deadline = DEADLINES.get(deadline_key, ahora + timedelta(days=1))
@@ -448,9 +448,9 @@ def mostrar_pantalla_pronosticos():
             
             pred_prev = predictions[user_email].get(m_id, {"goles1": 0, "goles2": 0, "ganador": "empate"})
             
-            # RESOLUCIÓN DINÁMICA DE NOMBRES DE EQUIPOS
-            eq1_name = resolve_team_name(p, 1, matches, predictions[user_email], is_admin=False)
-            eq2_name = resolve_team_name(p, 2, matches, predictions[user_email], is_admin=False)
+            # Mostrar nombres abstractos si es eliminatoria para simplificar (O dejar que admin los llene en Sandbox)
+            eq1_name = resolve_team_name(p, 1, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo1']
+            eq2_name = resolve_team_name(p, 2, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo2']
             
             col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
             with col1: st.write(f"<h5 style='text-align: right; color:#00ff87;'>{eq1_name}</h5>", unsafe_allow_html=True)
@@ -468,22 +468,11 @@ def mostrar_pantalla_pronosticos():
             ganador_ui = st.radio("Tendencia en 90/120 min:", opciones_txt, index=idx_ganador, key=f"rad_{m_id}", horizontal=True, disabled=not puede_editar)
             ganador_final = opciones_val[opciones_txt.index(ganador_ui)]
 
-            clasifica_final = None
-            if fase_sel != "fase_grupos":
-                opciones_clasif_txt = ["- Selecciona quién avanza -", eq1_name, eq2_name]
-                opciones_clasif_val = [None, "equipo1", "equipo2"]
-                
-                prev_clasif = pred_prev.get("clasifica")
-                idx_clasif = opciones_clasif_val.index(prev_clasif) if prev_clasif in opciones_clasif_val else 0
-                
-                clasif_ui = st.selectbox("Clasifica a la siguiente ronda:", opciones_clasif_txt, index=idx_clasif, key=f"clasif_{m_id}", disabled=not puede_editar)
-                clasifica_final = opciones_clasif_val[opciones_clasif_txt.index(clasif_ui)]
-
             st.divider()
-            nuevos_pronosticos[m_id] = {"goles1": g1, "goles2": g2, "ganador": ganador_final, "clasifica": clasifica_final}
+            nuevos_pronosticos[m_id] = {"goles1": g1, "goles2": g2, "ganador": ganador_final}
 
         if puede_editar:
-            if st.form_submit_button("Guardar Pronósticos", type="primary"):
+            if st.form_submit_button("Guardar Pronósticos de Partidos", type="primary"):
                 predictions[user_email].update(nuevos_pronosticos)
                 save_data(predictions, DB_PREDICTIONS)
                 st.success("¡Pronósticos guardados correctamente!")
@@ -491,34 +480,56 @@ def mostrar_pantalla_pronosticos():
              st.form_submit_button("Guardar Pronósticos", disabled=True)
 
 def mostrar_predicciones_especiales():
-    st.header("Predicciones Especiales (Bonos)")
-    st.write("Si aciertas al Campeón y Vicecampeón desde la Fase de Grupos, obtienes 20 pts y 15 pts respectivamente.")
+    st.header("Mis Equipos Clasificados (Bonos)")
+    st.write("Selecciona explícitamente qué países crees que llegarán a cada fase del torneo. ¡Mientras más lejos lleguen tus elegidos, más puntos ganas!")
     
     ahora = datetime.now()
-    puede_editar = ahora <= DEADLINES["fase_grupos"]
+    puede_editar = ahora <= DEADLINES["eliminatorias"]
+    
+    if puede_editar:
+        st.info(f"Podrás editar estas listas hasta el: {DEADLINES['eliminatorias'].strftime('%Y-%m-%d %H:%M')}")
+    else:
+        st.warning("Esta sección ya está CERRADA para edición.")
     
     specials = load_data(DB_SPECIALS)
     user_email = st.session_state['user']
     
-    if user_email not in specials: specials[user_email] = {"campeon": "", "vicecampeon": ""}
+    if user_email not in specials: 
+        specials[user_email] = {"octavos": [], "cuartos": [], "semis": [], "campeon": "", "vicecampeon": ""}
+    
     mis_specials = specials[user_email]
 
-    equipos_probables = ["Argentina", "Brasil", "Francia", "Inglaterra", "España", "Alemania", "Ecuador", "EEUU", "Portugal", "Otro"]
-
     with st.form("form_specials"):
-        idx_campeon = equipos_probables.index(mis_specials["campeon"]) if mis_specials["campeon"] in equipos_probables else 0
-        idx_vice = equipos_probables.index(mis_specials["vicecampeon"]) if mis_specials["vicecampeon"] in equipos_probables else 0
-
-        campeon = st.selectbox("🏆 Campeón del Mundo", equipos_probables, index=idx_campeon, disabled=not puede_editar)
-        vice = st.selectbox("🥈 Vicecampeón", equipos_probables, index=idx_vice, disabled=not puede_editar)
+        st.subheader("Clasificados por Etapa")
         
+        col1, col2 = st.columns(2)
+        with col1:
+            octavos_sel = st.multiselect("⚽ Clasificados a OCTAVOS (Máx 16) | +5 pts c/u", EQUIPOS_MUNDIAL, default=mis_specials.get("octavos", []), max_selections=16, disabled=not puede_editar)
+            cuartos_sel = st.multiselect("🔥 Clasificados a CUARTOS (Máx 8) | +7 pts c/u", EQUIPOS_MUNDIAL, default=mis_specials.get("cuartos", []), max_selections=8, disabled=not puede_editar)
+        with col2:
+            semis_sel = st.multiselect("🌟 Clasificados a SEMIS (Máx 4) | +10 pts c/u", EQUIPOS_MUNDIAL, default=mis_specials.get("semis", []), max_selections=4, disabled=not puede_editar)
+            
+            st.divider()
+            
+            idx_campeon = EQUIPOS_MUNDIAL.index(mis_specials.get("campeon")) if mis_specials.get("campeon") in EQUIPOS_MUNDIAL else 0
+            idx_vice = EQUIPOS_MUNDIAL.index(mis_specials.get("vicecampeon")) if mis_specials.get("vicecampeon") in EQUIPOS_MUNDIAL else 0
+            
+            campeon_sel = st.selectbox("🏆 CAMPEÓN del Mundo | +20 pts", [""] + EQUIPOS_MUNDIAL, index=idx_campeon+1 if mis_specials.get("campeon") else 0, disabled=not puede_editar)
+            vice_sel = st.selectbox("🥈 VICECAMPEÓN | +15 pts", [""] + EQUIPOS_MUNDIAL, index=idx_vice+1 if mis_specials.get("vicecampeon") else 0, disabled=not puede_editar)
+
         if puede_editar:
-            if st.form_submit_button("Guardar Predicciones Especiales"):
-                specials[user_email] = {"campeon": campeon, "vicecampeon": vice}
+            if st.form_submit_button("Guardar Equipos Clasificados", type="primary"):
+                specials[user_email] = {
+                    "octavos": octavos_sel,
+                    "cuartos": cuartos_sel,
+                    "semis": semis_sel,
+                    "campeon": campeon_sel,
+                    "vicecampeon": vice_sel
+                }
                 save_data(specials, DB_SPECIALS)
-                st.success("Predicciones especiales guardadas.")
+                st.success("¡Equipos clasificados guardados con éxito!")
         else:
-             st.form_submit_button("Guardar Predicciones Especiales", disabled=True)
+             st.form_submit_button("Guardar Equipos", disabled=True)
 
 def mostrar_tabla_posiciones():
     st.header("Tabla de Posiciones")
@@ -534,45 +545,47 @@ def mostrar_tabla_posiciones():
 
     tabla_data = []
 
+    # Extraer las listas oficiales establecidas por el administrador
+    oficial_octavos = settings.get("octavos_oficial", [])
+    oficial_cuartos = settings.get("cuartos_oficial", [])
+    oficial_semis = settings.get("semis_oficial", [])
+    oficial_campeon = settings.get("campeon_oficial")
+    oficial_vice = settings.get("vice_oficial")
+
     for email, u_data in users.items():
         if u_data.get("rol") == "admin": continue
         if u_data["grupo"] == grupo_filtro:
             puntos_totales = 0
             user_preds = predictions.get(email, {})
+            user_specials = specials.get(email, {})
             
+            # 1. Puntos por Partidos (Goles y Ganador)
             for fase, partidos in matches.items():
                 for p in partidos:
                     if p["jugado"]:
                         m_id = p["id"]
                         if m_id in user_preds:
-                            # Resolver nombres de clasificados para comparar si atinó el equipo exacto
-                            pred_team_adv = None
-                            real_team_adv = None
-                            
-                            if fase != "fase_grupos":
-                                pred_slot = user_preds[m_id].get("clasifica")
-                                if pred_slot:
-                                    pred_team_adv = resolve_team_name(p, 1 if pred_slot == "equipo1" else 2, matches, user_preds, is_admin=False)
-                                
-                                real_slot = p.get("clasifica")
-                                if real_slot:
-                                    real_team_adv = resolve_team_name(p, 1 if real_slot == "equipo1" else 2, matches, None, is_admin=True)
-
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
                             real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
                             
                             pts = calcular_puntos_partido(
-                                user_preds[m_id]["goles1"], user_preds[m_id]["goles2"], pred_g, pred_team_adv,
-                                p["goles1"], p["goles2"], real_g, real_team_adv, fase
+                                user_preds[m_id]["goles1"], user_preds[m_id]["goles2"], pred_g,
+                                p["goles1"], p["goles2"], real_g
                             )
                             puntos_totales += pts
             
-            campeon_oficial = settings.get("campeon_oficial")
-            vice_oficial = settings.get("vice_oficial")
-            user_specials = specials.get(email, {})
-            
-            if campeon_oficial and user_specials.get("campeon") == campeon_oficial: puntos_totales += 20
-            if vice_oficial and user_specials.get("vicecampeon") == vice_oficial: puntos_totales += 15
+            # 2. Puntos por Equipos Clasificados
+            for equipo in user_specials.get("octavos", []):
+                if equipo in oficial_octavos: puntos_totales += 5
+                
+            for equipo in user_specials.get("cuartos", []):
+                if equipo in oficial_cuartos: puntos_totales += 7
+                
+            for equipo in user_specials.get("semis", []):
+                if equipo in oficial_semis: puntos_totales += 10
+                
+            if oficial_campeon and user_specials.get("campeon") == oficial_campeon: puntos_totales += 20
+            if oficial_vice and user_specials.get("vicecampeon") == oficial_vice: puntos_totales += 15
 
             tabla_data.append({"Nombre": u_data["nombre"], "Puntos": puntos_totales})
 
@@ -597,14 +610,14 @@ def render_admin_panel():
     menu = st.sidebar.radio("Opciones", [
         "Ver Tablas de Posiciones", 
         "Sandbox: Ingreso de Resultados", 
-        "Gestión de Fases", 
+        "Gestión de Fases y Clasificados", 
         "Sincronizar API (Botón Maestro)",
         "🔍 Diagnóstico de Conexión"
     ])
 
     if menu == "Ver Tablas de Posiciones": admin_ver_tablas()
     elif menu == "Sandbox: Ingreso de Resultados": admin_sandbox_resultados()
-    elif menu == "Gestión de Fases": admin_gestion_fases()
+    elif menu == "Gestión de Fases y Clasificados": admin_gestion_fases()
     elif menu == "Sincronizar API (Botón Maestro)": admin_sincronizar_api()
     elif menu == "🔍 Diagnóstico de Conexión": admin_diagnostico()
 
@@ -662,6 +675,12 @@ def admin_ver_tablas():
     grupo_sel = st.selectbox("Seleccionar Grupo a visualizar:", ["Todos", "Familia", "Amigos", "Trabajo"])
 
     tabla_data = []
+    
+    oficial_octavos = settings.get("octavos_oficial", [])
+    oficial_cuartos = settings.get("cuartos_oficial", [])
+    oficial_semis = settings.get("semis_oficial", [])
+    oficial_campeon = settings.get("campeon_oficial")
+    oficial_vice = settings.get("vice_oficial")
 
     for email, u_data in users.items():
         if u_data.get("rol") == "admin": continue
@@ -669,37 +688,31 @@ def admin_ver_tablas():
         if grupo_sel == "Todos" or u_data["grupo"] == grupo_sel:
             puntos_totales = 0
             user_preds = predictions.get(email, {})
+            user_specials = specials.get(email, {})
             
             for fase, partidos in matches.items():
                 for p in partidos:
                     if p["jugado"]:
                         m_id = p["id"]
                         if m_id in user_preds:
-                            pred_team_adv = None
-                            real_team_adv = None
-                            
-                            if fase != "fase_grupos":
-                                pred_slot = user_preds[m_id].get("clasifica")
-                                if pred_slot: pred_team_adv = resolve_team_name(p, 1 if pred_slot == "equipo1" else 2, matches, user_preds, is_admin=False)
-                                
-                                real_slot = p.get("clasifica")
-                                if real_slot: real_team_adv = resolve_team_name(p, 1 if real_slot == "equipo1" else 2, matches, None, is_admin=True)
-
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
                             real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
                             
                             pts = calcular_puntos_partido(
-                                user_preds[m_id]["goles1"], user_preds[m_id]["goles2"], pred_g, pred_team_adv,
-                                p["goles1"], p["goles2"], real_g, real_team_adv, fase
+                                user_preds[m_id]["goles1"], user_preds[m_id]["goles2"], pred_g,
+                                p["goles1"], p["goles2"], real_g
                             )
                             puntos_totales += pts
             
-            campeon_oficial = settings.get("campeon_oficial")
-            vice_oficial = settings.get("vice_oficial")
-            user_specials = specials.get(email, {})
-            
-            if campeon_oficial and user_specials.get("campeon") == campeon_oficial: puntos_totales += 20
-            if vice_oficial and user_specials.get("vicecampeon") == vice_oficial: puntos_totales += 15
+            for equipo in user_specials.get("octavos", []):
+                if equipo in oficial_octavos: puntos_totales += 5
+            for equipo in user_specials.get("cuartos", []):
+                if equipo in oficial_cuartos: puntos_totales += 7
+            for equipo in user_specials.get("semis", []):
+                if equipo in oficial_semis: puntos_totales += 10
+                
+            if oficial_campeon and user_specials.get("campeon") == oficial_campeon: puntos_totales += 20
+            if oficial_vice and user_specials.get("vicecampeon") == oficial_vice: puntos_totales += 15
 
             tabla_data.append({
                 "Nombre": u_data["nombre"], 
@@ -716,7 +729,7 @@ def admin_ver_tablas():
 
 def admin_sandbox_resultados():
     st.header("🛠️ Sandbox: Ingresar Resultados Reales")
-    st.write("Ingresa los resultados OFICIALES para calcular los puntos y armar el árbol de clasificación.")
+    st.write("Ingresa los marcadores OFICIALES para que la app calcule los puntos base por partido.")
     
     matches = load_data(DB_MATCHES)
     
@@ -742,9 +755,8 @@ def admin_sandbox_resultados():
         for p in partidos_fase:
             m_id = p["id"]
             
-            # El administrador ve los equipos basados en la realidad (Sandbox)
-            eq1_name = resolve_team_name(p, 1, matches, None, is_admin=True)
-            eq2_name = resolve_team_name(p, 2, matches, None, is_admin=True)
+            eq1_name = resolve_team_name(p, 1, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo1']
+            eq2_name = resolve_team_name(p, 2, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo2']
 
             st.markdown(f"**{p.get('grupo', '')}**: {eq1_name} vs {eq2_name}")
             
@@ -752,7 +764,15 @@ def admin_sandbox_resultados():
             with col1: g1 = st.number_input(f"Goles Eq 1", min_value=0, max_value=15, value=p.get("goles1") if p.get("goles1") is not None else 0, key=f"real_g1_{m_id}")
             with col2: g2 = st.number_input(f"Goles Eq 2", min_value=0, max_value=15, value=p.get("goles2") if p.get("goles2") is not None else 0, key=f"real_g2_{m_id}")
             with col3: jugado = st.checkbox("Partido Finalizado", value=p.get("jugado", False), key=f"jugado_{m_id}")
-            with col4: st.write("")
+            with col4: 
+                if fase_sel != "fase_grupos":
+                    # Solo en sandbox, el admin rutea visualmente los equipos en el árbol
+                    opc_clas_txt = ["- Selecciona para Árbol Visual -", eq1_name, eq2_name]
+                    opc_clas_val = [None, "equipo1", "equipo2"]
+                    prev_clasif = p.get("clasifica")
+                    idx_cl = opc_clas_val.index(prev_clasif) if prev_clasif in opc_clas_val else 0
+                    clas_ui = st.selectbox("Avanza a siguiente ronda:", opc_clas_txt, index=idx_cl, key=f"clasif_{m_id}")
+                    p["clasifica"] = opc_clas_val[opc_clas_txt.index(clas_ui)]
 
             opciones_txt = [f"Gana {eq1_name}", "Empate", f"Gana {eq2_name}"]
             opciones_val = ["equipo1", "empate", "equipo2"]
@@ -764,58 +784,60 @@ def admin_sandbox_resultados():
             ganador_ui = st.radio("Tendencia en 90/120 min OFICIAL:", opciones_txt, index=idx_ganador, key=f"real_rad_{m_id}", horizontal=True)
             ganador_real = opciones_val[opciones_txt.index(ganador_ui)]
 
-            clasifica_final = None
-            if fase_sel != "fase_grupos":
-                opc_clas_txt = ["- Nadie aún -", eq1_name, eq2_name]
-                opc_clas_val = [None, "equipo1", "equipo2"]
-                
-                prev_clasif = p.get("clasifica")
-                idx_cl = opc_clas_val.index(prev_clasif) if prev_clasif in opc_clas_val else 0
-                
-                clas_ui = st.selectbox("Clasifica REAL a siguiente ronda:", opc_clas_txt, index=idx_cl, key=f"clasif_{m_id}")
-                clasifica_final = opc_clas_val[opc_clas_txt.index(clas_ui)]
-
             p["goles1"] = g1 if jugado else None
             p["goles2"] = g2 if jugado else None
             p["jugado"] = jugado
             p["ganador_real"] = ganador_real
-            p["clasifica"] = clasifica_final
             st.divider()
 
-        if st.form_submit_button("Guardar Resultados Oficiales", type="primary"):
+        if st.form_submit_button("Guardar Resultados de Partidos", type="primary"):
             save_data(matches, DB_MATCHES)
-            st.success("Resultados guardados. El árbol de clasificación y los puntos se han actualizado.")
+            st.success("Resultados guardados exitosamente.")
 
 def admin_gestion_fases():
-    st.header("⚙️ Gestión de Fases del Torneo")
+    st.header("⚙️ Gestión de Fases y Clasificados")
+    st.write("En esta sección declaras oficialmente qué equipos avanzaron en la realidad. Esto es lo que la app usará para darle puntos de clasificación a los usuarios.")
+    
     settings = load_data(DB_SETTINGS)
     
     with st.form("form_fases"):
+        st.subheader("Configuración Visual")
         nueva_fase = st.selectbox("Fase Activa Inicial por Defecto (Al abrir la app)", 
                                  list(FASES_NOMBRES.keys()),
                                  index=list(FASES_NOMBRES.keys()).index(settings.get("fase_actual", "fase_grupos")),
                                  format_func=lambda x: FASES_NOMBRES[x])
         
-        st.subheader("Declaración de Campeones (Al finalizar el mundial)")
-        equipos = ["", "Argentina", "Brasil", "Francia", "Inglaterra", "España", "Alemania", "Ecuador", "EEUU", "Portugal"]
-        idx_c = equipos.index(settings.get("campeon_oficial")) if settings.get("campeon_oficial") in equipos else 0
-        idx_v = equipos.index(settings.get("vice_oficial")) if settings.get("vice_oficial") in equipos else 0
+        st.divider()
+        st.subheader("Declaración Oficial de Clasificados (Para cálculo de puntos)")
         
-        c_oficial = st.selectbox("Campeón Oficial", equipos, index=idx_c)
-        v_oficial = st.selectbox("Vicecampeón Oficial", equipos, index=idx_v)
+        col1, col2 = st.columns(2)
+        with col1:
+            oct_oficial = st.multiselect("⚽ 16 Equipos Oficiales en OCTAVOS", EQUIPOS_MUNDIAL, default=settings.get("octavos_oficial", []), max_selections=16)
+            cua_oficial = st.multiselect("🔥 8 Equipos Oficiales en CUARTOS", EQUIPOS_MUNDIAL, default=settings.get("cuartos_oficial", []), max_selections=8)
+        with col2:
+            sem_oficial = st.multiselect("🌟 4 Equipos Oficiales en SEMIS", EQUIPOS_MUNDIAL, default=settings.get("semis_oficial", []), max_selections=4)
+            
+            idx_c = EQUIPOS_MUNDIAL.index(settings.get("campeon_oficial")) if settings.get("campeon_oficial") in EQUIPOS_MUNDIAL else -1
+            idx_v = EQUIPOS_MUNDIAL.index(settings.get("vice_oficial")) if settings.get("vice_oficial") in EQUIPOS_MUNDIAL else -1
+            
+            c_oficial = st.selectbox("🏆 Campeón Oficial", [""] + EQUIPOS_MUNDIAL, index=idx_c+1)
+            v_oficial = st.selectbox("🥈 Vicecampeón Oficial", [""] + EQUIPOS_MUNDIAL, index=idx_v+1)
 
-        if st.form_submit_button("Actualizar Configuración"):
+        if st.form_submit_button("Guardar Clasificados Oficiales", type="primary"):
             settings["fase_actual"] = nueva_fase
+            settings["octavos_oficial"] = oct_oficial
+            settings["cuartos_oficial"] = cua_oficial
+            settings["semis_oficial"] = sem_oficial
             settings["campeon_oficial"] = c_oficial if c_oficial != "" else None
             settings["vice_oficial"] = v_oficial if v_oficial != "" else None
             save_data(settings, DB_SETTINGS)
-            st.success("Configuración del torneo actualizada.")
+            st.success("Configuración actualizada. La tabla de posiciones ha repartido los puntos.")
     
     st.divider()
     st.subheader("Zona de Peligro")
     if st.button("⚠️ Restaurar Partidos de Prueba (OBLIGATORIO DESPUÉS DE ACTUALIZAR EL CÓDIGO)"):
         save_data(get_initial_matches(), DB_MATCHES) 
-        st.success("¡Base de datos actualizada! El árbol dinámico ya está integrado en tu Google Sheet.")
+        st.success("¡Base de datos de partidos restaurada!.")
         st.rerun()
 
 def admin_sincronizar_api():
