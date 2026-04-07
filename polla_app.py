@@ -232,14 +232,14 @@ def get_initial_matches():
             {"id": "G72", "grupo": "Grupo J", "equipo1": "Jordania", "equipo2": "Argentina", "fecha": "2026-06-27 22:00", "goles1": None, "goles2": None, "jugado": False}
         ],
         "octavos": [
-            {"id": "O1", "grupo": "Octavos 1", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O2", "grupo": "Octavos 2", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O3", "grupo": "Octavos 3", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O4", "grupo": "Octavos 4", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O5", "grupo": "Octavos 5", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O6", "grupo": "Octavos 6", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O7", "grupo": "Octavos 7", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O8", "grupo": "Octavos 8", "equipo1": "Por Definir", "equipo2": "Por Definir", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "O1", "grupo": "Octavos 1", "equipo1": "1ro Grupo A", "equipo2": "2do Grupo B", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O2", "grupo": "Octavos 2", "equipo1": "1ro Grupo C", "equipo2": "2do Grupo D", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O3", "grupo": "Octavos 3", "equipo1": "1ro Grupo E", "equipo2": "2do Grupo F", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O4", "grupo": "Octavos 4", "equipo1": "1ro Grupo G", "equipo2": "2do Grupo H", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O5", "grupo": "Octavos 5", "equipo1": "1ro Grupo I", "equipo2": "2do Grupo J", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O6", "grupo": "Octavos 6", "equipo1": "1ro Grupo K", "equipo2": "2do Grupo L", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O7", "grupo": "Octavos 7", "equipo1": "Mejor 3ro (1)", "equipo2": "Mejor 3ro (2)", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O8", "grupo": "Octavos 8", "equipo1": "Mejor 3ro (3)", "equipo2": "Mejor 3ro (4)", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "cuartos": [
             {"id": "C1", "grupo": "Cuartos 1", "origen1": "O1", "origen2": "O2", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
@@ -278,7 +278,7 @@ def init_db():
         save_data(get_initial_matches(), DB_MATCHES)
 
 # ==========================================
-# UTILIDADES
+# UTILIDADES Y ÁRBOL DINÁMICO
 # ==========================================
 def hash_password(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
@@ -292,29 +292,42 @@ def determinar_ganador(goles1, goles2):
     elif goles2 > goles1: return "equipo2"
     else: return "empate"
 
-def resolve_team_name(match_data, slot, matches_dict, is_admin=False):
-    origen_id = match_data.get(f"origen{slot}")
-    if not origen_id:
-        return match_data.get(f"equipo{slot}", "Por Definir")
-    
-    origin_match = None
+def get_match_by_id(matches_dict, m_id):
     for phase, m_list in matches_dict.items():
         for m in m_list:
-            if m["id"] == origen_id:
-                origin_match = m
-                break
-        if origin_match: break
-    
-    if not origin_match:
-        return f"Ganador {origen_id}"
+            if m["id"] == m_id: return m
+    return None
 
-    clasifica_slot = origin_match.get("clasifica") if is_admin else None
-    
-    if clasifica_slot in ["equipo1", "equipo2"]:
-        slot_num = 1 if clasifica_slot == "equipo1" else 2
-        return resolve_team_name(origin_match, slot_num, matches_dict, is_admin)
-    
-    return f"Ganador {origen_id}"
+# Resuelve el nombre del equipo en base al árbol del USUARIO
+def resolve_user_team(m_id, slot, matches_dict, user_preds):
+    p = get_match_by_id(matches_dict, m_id)
+    if f"origen{slot}" in p:
+        origen_id = p[f"origen{slot}"]
+        clasifica = user_preds.get(origen_id, {}).get("clasifica")
+        if clasifica == "equipo1": return resolve_user_team(origen_id, 1, matches_dict, user_preds)
+        elif clasifica == "equipo2": return resolve_user_team(origen_id, 2, matches_dict, user_preds)
+        else: return "Por Definir" 
+    else:
+        base_name = p.get(f"equipo{slot}")
+        if m_id.startswith("O"): # Si es octavos, el usuario selecciona el equipo de la lista
+            return user_preds.get(m_id, {}).get(f"equipo{slot}", base_name)
+        return base_name
+
+# Resuelve el nombre del equipo en base al árbol del ADMIN (La Realidad)
+def resolve_admin_team(m_id, slot, matches_dict):
+    p = get_match_by_id(matches_dict, m_id)
+    if f"origen{slot}" in p:
+        origen_id = p[f"origen{slot}"]
+        origin_p = get_match_by_id(matches_dict, origen_id)
+        clasifica = origin_p.get("clasifica")
+        if clasifica == "equipo1": return resolve_admin_team(origen_id, 1, matches_dict)
+        elif clasifica == "equipo2": return resolve_admin_team(origen_id, 2, matches_dict)
+        else: return "Por Definir"
+    else:
+        base_name = p.get(f"equipo{slot}")
+        if m_id.startswith("O"):
+            return p.get(f"equipo{slot}_real", base_name)
+        return base_name
 
 def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, real_goles1, real_goles2, real_ganador):
     puntos = 0
@@ -395,7 +408,7 @@ def render_dashboard_usuario():
     elif menu == "Tabla de Posiciones": mostrar_tabla_posiciones()
 
 def mostrar_pantalla_pronosticos():
-    st.header("Mis Pronósticos (Partidos)")
+    st.header("Mis Pronósticos (Árbol de Partidos)")
     st.write("Acierta los goles exactos y el ganador para sumar puntos base.")
     
     matches = load_data(DB_MATCHES)
@@ -448,16 +461,32 @@ def mostrar_pantalla_pronosticos():
             
             pred_prev = predictions[user_email].get(m_id, {"goles1": 0, "goles2": 0, "ganador": "empate"})
             
-            # Mostrar nombres abstractos si es eliminatoria para simplificar (O dejar que admin los llene en Sandbox)
-            eq1_name = resolve_team_name(p, 1, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo1']
-            eq2_name = resolve_team_name(p, 2, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo2']
-            
             col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
-            with col1: st.write(f"<h5 style='text-align: right; color:#00ff87;'>{eq1_name}</h5>", unsafe_allow_html=True)
+            
+            # EL USUARIO ELIGE LOS PAISES EN OCTAVOS
+            if fase_sel == "octavos":
+                base_eq1 = p['equipo1']
+                base_eq2 = p['equipo2']
+                
+                idx1 = EQUIPOS_MUNDIAL.index(pred_prev.get("equipo1")) + 1 if pred_prev.get("equipo1") in EQUIPOS_MUNDIAL else 0
+                idx2 = EQUIPOS_MUNDIAL.index(pred_prev.get("equipo2")) + 1 if pred_prev.get("equipo2") in EQUIPOS_MUNDIAL else 0
+                
+                with col1: eq1_name = st.selectbox(base_eq1, [base_eq1] + EQUIPOS_MUNDIAL, index=idx1, key=f"sel1_{m_id}", disabled=not puede_editar)
+                with col5: eq2_name = st.selectbox(base_eq2, [base_eq2] + EQUIPOS_MUNDIAL, index=idx2, key=f"sel2_{m_id}", disabled=not puede_editar)
+                
+                nuevos_pronosticos[m_id] = {"equipo1": eq1_name, "equipo2": eq2_name}
+            else:
+                # Las demas fases arrastran el nombre de la fase anterior automaticamente
+                eq1_name = resolve_user_team(m_id, 1, matches, predictions[user_email]) if fase_sel != "fase_grupos" else p['equipo1']
+                eq2_name = resolve_user_team(m_id, 2, matches, predictions[user_email]) if fase_sel != "fase_grupos" else p['equipo2']
+                
+                with col1: st.write(f"<h5 style='text-align: right; color:#00ff87;'>{eq1_name}</h5>", unsafe_allow_html=True)
+                with col5: st.write(f"<h5 style='color:#00ff87;'>{eq2_name}</h5>", unsafe_allow_html=True)
+                nuevos_pronosticos[m_id] = {}
+
             with col2: g1 = st.number_input("Goles", min_value=0, max_value=15, value=pred_prev.get("goles1", 0), key=f"g1_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
             with col3: st.markdown("<h4 style='text-align: center;'>vs</h4>", unsafe_allow_html=True)
             with col4: g2 = st.number_input("Goles", min_value=0, max_value=15, value=pred_prev.get("goles2", 0), key=f"g2_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
-            with col5: st.write(f"<h5 style='color:#00ff87;'>{eq2_name}</h5>", unsafe_allow_html=True)
             
             opciones_txt = [f"Gana {eq1_name}", "Empate", f"Gana {eq2_name}"]
             opciones_val = ["equipo1", "empate", "equipo2"]
@@ -468,8 +497,19 @@ def mostrar_pantalla_pronosticos():
             ganador_ui = st.radio("Tendencia en 90/120 min:", opciones_txt, index=idx_ganador, key=f"rad_{m_id}", horizontal=True, disabled=not puede_editar)
             ganador_final = opciones_val[opciones_txt.index(ganador_ui)]
 
+            clasifica_final = None
+            if fase_sel != "fase_grupos":
+                opciones_clasif_txt = ["- Selecciona quién avanza -", eq1_name, eq2_name]
+                opciones_clasif_val = [None, "equipo1", "equipo2"]
+                
+                prev_clasif = pred_prev.get("clasifica")
+                idx_clasif = opciones_clasif_val.index(prev_clasif) if prev_clasif in opciones_clasif_val else 0
+                
+                clasif_ui = st.selectbox("Clasifica a la siguiente ronda:", opciones_clasif_txt, index=idx_clasif, key=f"clasif_{m_id}", disabled=not puede_editar)
+                clasifica_final = opciones_clasif_val[opciones_clasif_txt.index(clasif_ui)]
+
             st.divider()
-            nuevos_pronosticos[m_id] = {"goles1": g1, "goles2": g2, "ganador": ganador_final}
+            nuevos_pronosticos[m_id].update({"goles1": g1, "goles2": g2, "ganador": ganador_final, "clasifica": clasifica_final})
 
         if puede_editar:
             if st.form_submit_button("Guardar Pronósticos de Partidos", type="primary"):
@@ -545,7 +585,6 @@ def mostrar_tabla_posiciones():
 
     tabla_data = []
 
-    # Extraer las listas oficiales establecidas por el administrador
     oficial_octavos = settings.get("octavos_oficial", [])
     oficial_cuartos = settings.get("cuartos_oficial", [])
     oficial_semis = settings.get("semis_oficial", [])
@@ -559,12 +598,23 @@ def mostrar_tabla_posiciones():
             user_preds = predictions.get(email, {})
             user_specials = specials.get(email, {})
             
-            # 1. Puntos por Partidos (Goles y Ganador)
+            # 1. Puntos por Partidos
             for fase, partidos in matches.items():
                 for p in partidos:
                     if p["jugado"]:
                         m_id = p["id"]
                         if m_id in user_preds:
+                            # Verificamos si el usuario le atinó a los equipos exactos del cruce
+                            if fase != "fase_grupos":
+                                user_eq1 = resolve_user_team(m_id, 1, matches, user_preds)
+                                user_eq2 = resolve_user_team(m_id, 2, matches, user_preds)
+                                real_eq1 = resolve_admin_team(m_id, 1, matches)
+                                real_eq2 = resolve_admin_team(m_id, 2, matches)
+                                
+                                # Si el usuario no predijo el mismo cruce que ocurrió en la realidad, no gana puntos de goles en este partido.
+                                if user_eq1 != real_eq1 or user_eq2 != real_eq2:
+                                    continue 
+
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
                             real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
                             
@@ -574,13 +624,11 @@ def mostrar_tabla_posiciones():
                             )
                             puntos_totales += pts
             
-            # 2. Puntos por Equipos Clasificados
+            # 2. Puntos por Equipos Clasificados (Listas Especiales)
             for equipo in user_specials.get("octavos", []):
                 if equipo in oficial_octavos: puntos_totales += 5
-                
             for equipo in user_specials.get("cuartos", []):
                 if equipo in oficial_cuartos: puntos_totales += 7
-                
             for equipo in user_specials.get("semis", []):
                 if equipo in oficial_semis: puntos_totales += 10
                 
@@ -695,6 +743,15 @@ def admin_ver_tablas():
                     if p["jugado"]:
                         m_id = p["id"]
                         if m_id in user_preds:
+                            if fase != "fase_grupos":
+                                user_eq1 = resolve_user_team(m_id, 1, matches, user_preds)
+                                user_eq2 = resolve_user_team(m_id, 2, matches, user_preds)
+                                real_eq1 = resolve_admin_team(m_id, 1, matches)
+                                real_eq2 = resolve_admin_team(m_id, 2, matches)
+                                
+                                if user_eq1 != real_eq1 or user_eq2 != real_eq2:
+                                    continue 
+
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
                             real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
                             
@@ -755,18 +812,29 @@ def admin_sandbox_resultados():
         for p in partidos_fase:
             m_id = p["id"]
             
-            eq1_name = resolve_team_name(p, 1, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo1']
-            eq2_name = resolve_team_name(p, 2, matches, is_admin=True) if fase_sel != "fase_grupos" else p['equipo2']
-
-            st.markdown(f"**{p.get('grupo', '')}**: {eq1_name} vs {eq2_name}")
-            
             col1, col2, col3, col4 = st.columns(4)
+            
+            if fase_sel == "octavos":
+                base_eq1 = p['equipo1']
+                base_eq2 = p['equipo2']
+                idx1 = EQUIPOS_MUNDIAL.index(p.get("equipo1_real")) + 1 if p.get("equipo1_real") in EQUIPOS_MUNDIAL else 0
+                idx2 = EQUIPOS_MUNDIAL.index(p.get("equipo2_real")) + 1 if p.get("equipo2_real") in EQUIPOS_MUNDIAL else 0
+                
+                with col1: eq1_name = st.selectbox(f"REAL: {base_eq1}", [base_eq1] + EQUIPOS_MUNDIAL, index=idx1, key=f"rsel1_{m_id}")
+                with col2: eq2_name = st.selectbox(f"REAL: {base_eq2}", [base_eq2] + EQUIPOS_MUNDIAL, index=idx2, key=f"rsel2_{m_id}")
+                
+                p["equipo1_real"] = eq1_name
+                p["equipo2_real"] = eq2_name
+            else:
+                eq1_name = resolve_admin_team(m_id, 1, matches) if fase_sel != "fase_grupos" else p['equipo1']
+                eq2_name = resolve_admin_team(m_id, 2, matches) if fase_sel != "fase_grupos" else p['equipo2']
+                st.markdown(f"**{p.get('grupo', '')}**: {eq1_name} vs {eq2_name}")
+            
             with col1: g1 = st.number_input(f"Goles Eq 1", min_value=0, max_value=15, value=p.get("goles1") if p.get("goles1") is not None else 0, key=f"real_g1_{m_id}")
             with col2: g2 = st.number_input(f"Goles Eq 2", min_value=0, max_value=15, value=p.get("goles2") if p.get("goles2") is not None else 0, key=f"real_g2_{m_id}")
             with col3: jugado = st.checkbox("Partido Finalizado", value=p.get("jugado", False), key=f"jugado_{m_id}")
             with col4: 
                 if fase_sel != "fase_grupos":
-                    # Solo en sandbox, el admin rutea visualmente los equipos en el árbol
                     opc_clas_txt = ["- Selecciona para Árbol Visual -", eq1_name, eq2_name]
                     opc_clas_val = [None, "equipo1", "equipo2"]
                     prev_clasif = p.get("clasifica")
