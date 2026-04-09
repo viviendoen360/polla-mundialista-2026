@@ -401,11 +401,62 @@ def render_dashboard_usuario():
         st.session_state.clear()
         st.rerun()
 
-    menu = st.sidebar.radio("Navegación", ["Mis Pronósticos (Partidos)", "Predicciones Especiales (Clasificados)", "Tabla de Posiciones"])
+    menu = st.sidebar.radio("Navegación", ["Mis Pronósticos (Partidos)", "Predicciones Especiales (Clasificados)", "Tabla de Posiciones", "Resultados Oficiales"])
 
     if menu == "Mis Pronósticos (Partidos)": mostrar_pantalla_pronosticos()
     elif menu == "Predicciones Especiales (Clasificados)": mostrar_predicciones_especiales()
     elif menu == "Tabla de Posiciones": mostrar_tabla_posiciones()
+    elif menu == "Resultados Oficiales": mostrar_resultados_oficiales()
+
+def mostrar_resultados_oficiales():
+    st.header("Resultados Oficiales")
+    st.write("Consulta los marcadores reales y equipos clasificados a medida que avanza el torneo.")
+    
+    matches = load_data(DB_MATCHES)
+    settings = load_data(DB_SETTINGS)
+
+    col_filtro1, col_filtro2 = st.columns(2)
+    with col_filtro1:
+        fase_por_defecto = settings.get("fase_actual", "fase_grupos")
+        idx_fase = list(FASES_NOMBRES.keys()).index(fase_por_defecto) if fase_por_defecto in FASES_NOMBRES else 0
+        fase_sel = st.selectbox("Fase del Torneo", list(FASES_NOMBRES.keys()), index=idx_fase, format_func=lambda x: FASES_NOMBRES[x], key="res_fase")
+    
+    with col_filtro2:
+        if fase_sel == "fase_grupos":
+            lista_grupos = ["Todos"] + [f"Grupo {chr(i)}" for i in range(65, 77)] 
+            grupo_filtro = st.selectbox("Sub-filtro: Grupo", lista_grupos, key="res_grupo")
+        else:
+            grupo_filtro = "Todos"
+            st.selectbox("Sub-filtro: Grupo", ["Único"], disabled=True, key="res_grupo_dis")
+
+    partidos_fase = matches.get(fase_sel, [])
+    if grupo_filtro != "Todos":
+        partidos_fase = [p for p in partidos_fase if p.get("grupo") == grupo_filtro]
+        
+    if not partidos_fase: 
+        st.write("No hay partidos en este grupo o fase.")
+        
+    for p in partidos_fase:
+        m_id = p["id"]
+        
+        # Obtenemos los nombres reales de los equipos
+        eq1_name = resolve_admin_team(m_id, 1, matches) if fase_sel != "fase_grupos" else p['equipo1']
+        eq2_name = resolve_admin_team(m_id, 2, matches) if fase_sel != "fase_grupos" else p['equipo2']
+        
+        st.markdown(f"**{p.get('grupo', '')}** | Fecha: {p['fecha']}")
+        
+        if p.get("jugado", False):
+            g1 = p.get("goles1", 0)
+            g2 = p.get("goles2", 0)
+            st.success(f"**{eq1_name}** &nbsp;&nbsp; {g1} - {g2} &nbsp;&nbsp;  **{eq2_name}**")
+            
+            if fase_sel != "fase_grupos" and p.get("clasifica"):
+                eq_clasifica = eq1_name if p["clasifica"] == "equipo1" else eq2_name
+                st.info(f"✅ Avanza: **{eq_clasifica}**")
+        else:
+            st.write(f"⏳ *{eq1_name} vs {eq2_name}* (Pendiente)")
+            
+        st.divider()
 
 def mostrar_pantalla_pronosticos():
     st.header("Mis Pronósticos (Árbol de Partidos)")
@@ -657,17 +708,41 @@ def render_admin_panel():
 
     menu = st.sidebar.radio("Opciones", [
         "Ver Tablas de Posiciones", 
+        "Resultados Oficiales",
         "Sandbox: Ingreso de Resultados", 
         "Gestión de Fases y Clasificados", 
+        "Gestión de Usuarios",
         "Sincronizar API (Botón Maestro)",
         "🔍 Diagnóstico de Conexión"
     ])
 
     if menu == "Ver Tablas de Posiciones": admin_ver_tablas()
+    elif menu == "Resultados Oficiales": mostrar_resultados_oficiales()
     elif menu == "Sandbox: Ingreso de Resultados": admin_sandbox_resultados()
     elif menu == "Gestión de Fases y Clasificados": admin_gestion_fases()
+    elif menu == "Gestión de Usuarios": admin_gestion_usuarios()
     elif menu == "Sincronizar API (Botón Maestro)": admin_sincronizar_api()
     elif menu == "🔍 Diagnóstico de Conexión": admin_diagnostico()
+
+def admin_gestion_usuarios():
+    st.header("👥 Gestión de Usuarios")
+    st.write("Si algún participante se registró en el grupo equivocado, puedes reasignarlo aquí.")
+    
+    users = load_data(DB_USERS)
+    lista_usuarios = {email: u["nombre"] + f" (Actual: {u['grupo']})" for email, u in users.items() if u.get("rol") != "admin"}
+
+    if not lista_usuarios:
+        st.write("Aún no hay usuarios registrados (aparte del administrador).")
+        return
+
+    with st.form("form_mover_usuario"):
+        email_sel = st.selectbox("Selecciona el usuario:", list(lista_usuarios.keys()), format_func=lambda x: lista_usuarios[x])
+        nuevo_grupo = st.selectbox("Mover al nuevo grupo:", ["Familia", "Amigos", "Trabajo"])
+
+        if st.form_submit_button("Actualizar Grupo", type="primary"):
+            users[email_sel]["grupo"] = nuevo_grupo
+            save_data(users, DB_USERS)
+            st.success(f"¡Usuario actualizado! Ahora sus puntos sumarán en la tabla de {nuevo_grupo}.")
 
 def admin_diagnostico():
     st.header("🔍 Diagnóstico de Conexión a Google Sheets")
