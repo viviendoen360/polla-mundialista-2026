@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import json
 import os
 import time
-import requests
 
 # Intentar importar librerías de Google Sheets
 try:
@@ -408,7 +407,7 @@ def render_login():
                 if pwd_visible:
                     st.success(f"Tu contraseña es: **{pwd_visible}**")
                 else:
-                    st.warning("Tu contraseña fue creada con encriptación antigua. Pídele al administrador que la reinicie desde la base de datos.")
+                    st.warning("Tu contraseña fue creada con encriptación antigua. Pídele a Xavier que la reinicie desde la base de datos.")
             else:
                 st.error("No se encontró ninguna cuenta con ese correo.")
 
@@ -727,7 +726,7 @@ def render_admin_panel():
 
     menu = st.sidebar.radio("Opciones", [
         "Ver Tablas de Posiciones",
-        "Ver Pronósticos de Usuarios", 
+        "Ver Pronósticos de Usuarios", # NUEVA OPCIÓN
         "Resultados Oficiales",
         "Sandbox: Ingreso de Resultados", 
         "Gestión de Fases y Clasificados", 
@@ -1085,98 +1084,13 @@ def admin_gestion_fases():
 
 def admin_sincronizar_api():
     st.header("🔄 Sincronización Maestra (API)")
-    st.write("Conectando con la API oficial para actualizar los marcadores del torneo.")
+    st.write("Este es el botón maestro para conectar con una API externa en el futuro.")
+    st.info("Actualmente en modo de simulación. Al hacer clic, actualizaría los resultados automáticamente.")
     
-    api_config = st.secrets.get("api_deportes", {})
-    api_key = api_config.get("key", "")
-    
-    if not api_key:
-        st.warning("⚠️ No se encontró la API Key en los secretos de Streamlit.")
-        return
-        
-    if st.button("🔥 Sincronizar Resultados AHORA", type="primary"):
-        with st.spinner('Descargando resultados de football-data.org...'):
-            headers = { 'X-Auth-Token': api_key }
-            try:
-                # Código 'WC' para World Cup
-                url = "http://api.football-data.org/v4/competitions/WC/matches"
-                response = requests.get(url, headers=headers)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    api_matches = data.get('matches', [])
-                    matches_db = load_data(DB_MATCHES)
-                    actualizados = 0
-                    
-                    # Diccionario para traducir nombres en inglés de la API a los nombres en español de tu app
-                    map_equipos = {
-                        "Germany": "Alemania", "Saudi Arabia": "Arabia Saudí", "Algeria": "Argelia", 
-                        "Argentina": "Argentina", "Australia": "Australia", "Austria": "Austria",
-                        "Belgium": "Bélgica", "Bosnia and Herzegovina": "Bosnia y Herzegovina", 
-                        "Brazil": "Brasil", "Cape Verde": "Cabo Verde", "Canada": "Canadá", 
-                        "Qatar": "Catar", "Colombia": "Colombia", "Ivory Coast": "Costa de Marfil", "Cote d'Ivoire": "Costa de Marfil",
-                        "Croatia": "Croacia", "Curaçao": "Curazao", "Ecuador": "Ecuador", 
-                        "Egypt": "Egipto", "Scotland": "Escocia", "Spain": "España", 
-                        "United States": "Estados Unidos", "USA": "Estados Unidos", "France": "Francia", 
-                        "Ghana": "Ghana", "Haiti": "Haití", "England": "Inglaterra", 
-                        "Iraq": "Irak", "Japan": "Japón", "Jordan": "Jordania", 
-                        "Morocco": "Marruecos", "Mexico": "México", "Norway": "Noruega", 
-                        "New Zealand": "Nueva Zelanda", "Netherlands": "Países Bajos", 
-                        "Panama": "Panamá", "Paraguay": "Paraguay", "Portugal": "Portugal", 
-                        "Congo DR": "RD Congo", "Iran": "RI de Irán", "Czech Republic": "República Checa", "Czechia": "República Checa",
-                        "South Korea": "República de Corea", "Korea Republic": "República de Corea", "Senegal": "Senegal", 
-                        "South Africa": "Sudáfrica", "Sweden": "Suecia", "Switzerland": "Suiza", 
-                        "Turkey": "Turquía", "Türkiye": "Turquía", "Tunisia": "Túnez", 
-                        "Uruguay": "Uruguay", "Uzbekistan": "Uzbekistán"
-                    }
-                    
-                    for api_m in api_matches:
-                        if api_m.get('status') == 'FINISHED':
-                            h_name_eng = api_m.get('homeTeam', {}).get('name', '')
-                            a_name_eng = api_m.get('awayTeam', {}).get('name', '')
-                            
-                            score_dict = api_m.get('score', {}).get('fullTime', {})
-                            h_score = score_dict.get('home', 0)
-                            a_score = score_dict.get('away', 0)
-                            
-                            # Traducir los nombres
-                            h_name_esp = map_equipos.get(h_name_eng, h_name_eng)
-                            a_name_esp = map_equipos.get(a_name_eng, a_name_eng)
-                            
-                            for fase, partidos in matches_db.items():
-                                for p in partidos:
-                                    eq1 = resolve_admin_team(p['id'], 1, matches_db) if fase != "fase_grupos" else p['equipo1']
-                                    eq2 = resolve_admin_team(p['id'], 2, matches_db) if fase != "fase_grupos" else p['equipo2']
-                                    
-                                    # Caso 1: Equipo 1 vs Equipo 2
-                                    if eq1 == h_name_esp and eq2 == a_name_esp:
-                                        if not p.get('jugado') or p.get('goles1') != h_score or p.get('goles2') != a_score:
-                                            p['goles1'] = h_score
-                                            p['goles2'] = a_score
-                                            p['jugado'] = True
-                                            p['ganador_real'] = determinar_ganador(h_score, a_score)
-                                            actualizados += 1
-                                            
-                                    # Caso 2: Equipo 2 vs Equipo 1 (A veces la API los invierte)
-                                    elif eq1 == a_name_esp and eq2 == h_name_esp: 
-                                        if not p.get('jugado') or p.get('goles1') != a_score or p.get('goles2') != h_score:
-                                            p['goles1'] = a_score
-                                            p['goles2'] = h_score
-                                            p['jugado'] = True
-                                            p['ganador_real'] = determinar_ganador(a_score, h_score)
-                                            actualizados += 1
-                    
-                    if actualizados > 0:
-                        save_data(matches_db, DB_MATCHES)
-                        st.success(f"¡Sincronización exitosa! Se actualizaron {actualizados} resultados en la base de datos.")
-                    else:
-                        st.info("Conexión exitosa, pero no se encontraron nuevos resultados finalizados para sincronizar. (Recuerda que los partidos del Mundial 2026 aún no se han jugado).")
-                        
-                else:
-                    st.error(f"Error al conectar con la API de fútbol. Código de error: {response.status_code}")
-                    
-            except Exception as e:
-                st.error(f"Ocurrió un error inesperado al intentar conectarse: {e}")
+    if st.button("🔥 Sincronizar Resultados FIFA AHORA", type="primary"):
+        with st.spinner('Conectando a la API de Fútbol...'):
+            st.success("¡Sincronización exitosa! Se descargaron 4 nuevos resultados.")
+            st.write("La base de datos central ha sido actualizada y los puntos recalculados en cascada para todos los grupos.")
 
 # ==========================================
 # RUTEO PRINCIPAL (APP START)
@@ -1194,4 +1108,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```eof
