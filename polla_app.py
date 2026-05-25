@@ -259,7 +259,7 @@ def get_initial_matches():
 def init_db():
     if not load_data(DB_USERS):
         admin_pwd = hash_password("admin123")
-        save_data({"admin@polla.com": {"nombre": "Xavier Admin", "pwd": admin_pwd, "grupo": "Admin", "pais": "Ecuador", "rol": "admin"}}, DB_USERS)
+        save_data({"admin@polla.com": {"nombre": "Xavier Admin", "pwd": admin_pwd, "pwd_plain": "admin123", "grupo": "Admin", "pais": "Ecuador", "rol": "admin"}}, DB_USERS)
     
     if not load_data(DB_PREDICTIONS): save_data({}, DB_PREDICTIONS)
     if not load_data(DB_SPECIALS): save_data({}, DB_SPECIALS)
@@ -353,7 +353,7 @@ def render_login():
     else:
         st.warning("⚠️ Ejecutando en Modo Local. Configura GSheets para entorno de producción.")
         
-    tab1, tab2 = st.tabs(["Iniciar Sesión", "Registrarse"])
+    tab1, tab2, tab3 = st.tabs(["Iniciar Sesión", "Registrarse", "Recuperar Contraseña"])
     
     with tab1:
         st.subheader("Acceso a tu cuenta")
@@ -385,13 +385,31 @@ def render_login():
                 st.error("El correo ya está registrado.")
             elif new_name and new_email and new_pwd:
                 users[new_email] = {
-                    "nombre": new_name, "pwd": hash_password(new_pwd),
-                    "grupo": new_group, "pais": new_country, "rol": "user"
+                    "nombre": new_name, 
+                    "pwd": hash_password(new_pwd),
+                    "pwd_plain": new_pwd, # Guardamos copia legible para recuperación
+                    "grupo": new_group, 
+                    "pais": new_country, 
+                    "rol": "user"
                 }
                 save_data(users, DB_USERS)
                 st.success("¡Registro exitoso! Por favor inicia sesión.")
             else:
                 st.warning("Completa todos los campos.")
+                
+    with tab3:
+        st.subheader("Recuperar Contraseña")
+        rec_email = st.text_input("Correo electrónico registrado", key="rec_email").strip().lower()
+        if st.button("Mostrar mi Contraseña"):
+            users = load_data(DB_USERS)
+            if rec_email in users:
+                pwd_visible = users[rec_email].get("pwd_plain")
+                if pwd_visible:
+                    st.success(f"Tu contraseña es: **{pwd_visible}**")
+                else:
+                    st.warning("Tu contraseña fue creada con encriptación antigua. Pídele a Xavier que la reinicie desde la base de datos.")
+            else:
+                st.error("No se encontró ninguna cuenta con ese correo.")
 
 def render_dashboard_usuario():
     st.sidebar.title(f"Hola, {st.session_state['nombre']}")
@@ -707,7 +725,8 @@ def render_admin_panel():
         st.rerun()
 
     menu = st.sidebar.radio("Opciones", [
-        "Ver Tablas de Posiciones", 
+        "Ver Tablas de Posiciones",
+        "Ver Pronósticos de Usuarios", # NUEVA OPCIÓN
         "Resultados Oficiales",
         "Sandbox: Ingreso de Resultados", 
         "Gestión de Fases y Clasificados", 
@@ -717,12 +736,92 @@ def render_admin_panel():
     ])
 
     if menu == "Ver Tablas de Posiciones": admin_ver_tablas()
+    elif menu == "Ver Pronósticos de Usuarios": admin_ver_pronosticos()
     elif menu == "Resultados Oficiales": mostrar_resultados_oficiales()
     elif menu == "Sandbox: Ingreso de Resultados": admin_sandbox_resultados()
     elif menu == "Gestión de Fases y Clasificados": admin_gestion_fases()
     elif menu == "Gestión de Usuarios": admin_gestion_usuarios()
     elif menu == "Sincronizar API (Botón Maestro)": admin_sincronizar_api()
     elif menu == "🔍 Diagnóstico de Conexión": admin_diagnostico()
+
+def admin_ver_pronosticos():
+    st.header("👀 Ver Pronósticos de Usuarios")
+    st.write("Revisa las predicciones exactas de cada participante para auditar de dónde salen sus puntos.")
+    
+    users = load_data(DB_USERS)
+    predictions = load_data(DB_PREDICTIONS)
+    specials = load_data(DB_SPECIALS)
+    matches = load_data(DB_MATCHES)
+    
+    lista_usuarios = {email: u["nombre"] + f" ({u['grupo']})" for email, u in users.items() if u.get("rol") != "admin"}
+    
+    if not lista_usuarios:
+        st.info("Aún no hay usuarios registrados para auditar.")
+        return
+        
+    email_sel = st.selectbox("Selecciona un usuario a inspeccionar:", list(lista_usuarios.keys()), format_func=lambda x: lista_usuarios[x])
+    
+    user_preds = predictions.get(email_sel, {})
+    user_specials = specials.get(email_sel, {})
+    
+    st.subheader("🌟 Predicciones Especiales (Clasificados)")
+    
+    oct_txt = ", ".join(user_specials.get("octavos", [])) if user_specials.get("octavos") else "Ninguno"
+    cua_txt = ", ".join(user_specials.get("cuartos", [])) if user_specials.get("cuartos") else "Ninguno"
+    sem_txt = ", ".join(user_specials.get("semis", [])) if user_specials.get("semis") else "Ninguno"
+    
+    st.write(f"**⚽ A Octavos:** {oct_txt}")
+    st.write(f"**🔥 A Cuartos:** {cua_txt}")
+    st.write(f"**🌟 A Semis:** {sem_txt}")
+    st.write(f"**🏆 Campeón:** {user_specials.get('campeon', 'No seleccionado')}")
+    st.write(f"**🥈 Vicecampeón:** {user_specials.get('vicecampeon', 'No seleccionado')}")
+    
+    st.divider()
+    
+    st.subheader("⚽ Pronósticos de Partidos")
+    fase_sel = st.selectbox("Filtrar por Fase:", list(FASES_NOMBRES.keys()), format_func=lambda x: FASES_NOMBRES[x], key="admin_pron_fase")
+    
+    partidos_fase = matches.get(fase_sel, [])
+    
+    if not partidos_fase:
+        st.write("No hay partidos en esta fase.")
+        return
+        
+    tabla_partidos = []
+    for p in partidos_fase:
+        m_id = p["id"]
+        
+        # Obtenemos los equipos tal cual los ve el usuario en su árbol
+        eq1 = resolve_user_team(m_id, 1, matches, user_preds) if fase_sel != "fase_grupos" else p['equipo1']
+        eq2 = resolve_user_team(m_id, 2, matches, user_preds) if fase_sel != "fase_grupos" else p['equipo2']
+        
+        if m_id in user_preds:
+            pred = user_preds[m_id]
+            g1 = pred.get("goles1", "-")
+            g2 = pred.get("goles2", "-")
+            ganador = pred.get("ganador", "-")
+            
+            if ganador == "equipo1": ganador_txt = eq1
+            elif ganador == "equipo2": ganador_txt = eq2
+            elif ganador == "empate": ganador_txt = "Empate"
+            else: ganador_txt = ganador
+            
+            clasifica = pred.get("clasifica", "")
+            clasifica_txt = ""
+            if clasifica == "equipo1": clasifica_txt = eq1
+            elif clasifica == "equipo2": clasifica_txt = eq2
+        else:
+            g1, g2, ganador_txt, clasifica_txt = "-", "-", "-", "-"
+            
+        tabla_partidos.append({
+            "Partido (Árbol del Usuario)": f"{eq1} vs {eq2}",
+            "Marcador": f"{g1} - {g2}",
+            "Tendencia 90m": ganador_txt,
+            "Avanza (Si aplica)": clasifica_txt
+        })
+        
+    if tabla_partidos:
+        st.dataframe(pd.DataFrame(tabla_partidos), use_container_width=True)
 
 def admin_gestion_usuarios():
     st.header("👥 Gestión de Usuarios")
