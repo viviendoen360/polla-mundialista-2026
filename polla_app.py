@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import hashlib
@@ -45,6 +44,7 @@ DEADLINES = {
 
 FASES_NOMBRES = {
     "fase_grupos": "Fase de Grupos",
+    "dieciseisavos": "Dieciseisavos de Final",
     "octavos": "Octavos de Final",
     "cuartos": "Cuartos de Final",
     "semis": "Semifinales",
@@ -233,25 +233,43 @@ def get_initial_matches():
             {"id": "G71", "grupo": "Grupo J", "equipo1": "Argelia", "equipo2": "Austria", "fecha": "2026-06-27 22:00", "goles1": None, "goles2": None, "jugado": False},
             {"id": "G72", "grupo": "Grupo J", "equipo1": "Jordania", "equipo2": "Argentina", "fecha": "2026-06-27 22:00", "goles1": None, "goles2": None, "jugado": False}
         ],
+        "dieciseisavos": [
+            {"id": "D1", "grupo": "16avos 1", "equipo1": "1ro Grupo A", "equipo2": "Mejor 3ro (1)", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D2", "grupo": "16avos 2", "equipo1": "2do Grupo A", "equipo2": "2do Grupo B", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D3", "grupo": "16avos 3", "equipo1": "1ro Grupo B", "equipo2": "Mejor 3ro (2)", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D4", "grupo": "16avos 4", "equipo1": "2do Grupo C", "equipo2": "2do Grupo D", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D5", "grupo": "16avos 5", "equipo1": "1ro Grupo C", "equipo2": "Mejor 3ro (3)", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D6", "grupo": "16avos 6", "equipo1": "2do Grupo E", "equipo2": "2do Grupo F", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D7", "grupo": "16avos 7", "equipo1": "1ro Grupo D", "equipo2": "Mejor 3ro (4)", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D8", "grupo": "16avos 8", "equipo1": "2do Grupo G", "equipo2": "2do Grupo H", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D9", "grupo": "16avos 9", "equipo1": "1ro Grupo E", "equipo2": "Mejor 3ro (5)", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D10", "grupo": "16avos 10", "equipo1": "2do Grupo I", "equipo2": "2do Grupo J", "fecha": "2026-07-02", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D11", "grupo": "16avos 11", "equipo1": "1ro Grupo F", "equipo2": "Mejor 3ro (6)", "fecha": "2026-07-02", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D12", "grupo": "16avos 12", "equipo1": "2do Grupo K", "equipo2": "2do Grupo L", "fecha": "2026-07-02", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D13", "grupo": "16avos 13", "equipo1": "1ro Grupo G", "equipo2": "Mejor 3ro (7)", "fecha": "2026-07-03", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D14", "grupo": "16avos 14", "equipo1": "1ro Grupo H", "equipo2": "1ro Grupo I", "fecha": "2026-07-03", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D15", "grupo": "16avos 15", "equipo1": "1ro Grupo J", "equipo2": "1ro Grupo K", "fecha": "2026-07-03", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D16", "grupo": "16avos 16", "equipo1": "1ro Grupo L", "equipo2": "Mejor 3ro (8)", "fecha": "2026-07-03", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+        ],
         "octavos": [
-            {"id": "O1", "grupo": "Octavos 1", "equipo1": "1ro Grupo A", "equipo2": "2do Grupo B", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O2", "grupo": "Octavos 2", "equipo1": "1ro Grupo C", "equipo2": "2do Grupo D", "fecha": "2026-06-28", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O3", "grupo": "Octavos 3", "equipo1": "1ro Grupo E", "equipo2": "2do Grupo F", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O4", "grupo": "Octavos 4", "equipo1": "1ro Grupo G", "equipo2": "2do Grupo H", "fecha": "2026-06-29", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O5", "grupo": "Octavos 5", "equipo1": "1ro Grupo I", "equipo2": "2do Grupo J", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O6", "grupo": "Octavos 6", "equipo1": "1ro Grupo K", "equipo2": "2do Grupo L", "fecha": "2026-06-30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O7", "grupo": "Octavos 7", "equipo1": "Mejor 3ro (1)", "equipo2": "Mejor 3ro (2)", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O8", "grupo": "Octavos 8", "equipo1": "Mejor 3ro (3)", "equipo2": "Mejor 3ro (4)", "fecha": "2026-07-01", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "O1", "grupo": "Octavos 1", "origen1": "D1", "origen2": "D2", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O2", "grupo": "Octavos 2", "origen1": "D3", "origen2": "D4", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O3", "grupo": "Octavos 3", "origen1": "D5", "origen2": "D6", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O4", "grupo": "Octavos 4", "origen1": "D7", "origen2": "D8", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O5", "grupo": "Octavos 5", "origen1": "D9", "origen2": "D10", "fecha": "2026-07-06", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O6", "grupo": "Octavos 6", "origen1": "D11", "origen2": "D12", "fecha": "2026-07-06", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O7", "grupo": "Octavos 7", "origen1": "D13", "origen2": "D14", "fecha": "2026-07-07", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O8", "grupo": "Octavos 8", "origen1": "D15", "origen2": "D16", "fecha": "2026-07-07", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "cuartos": [
-            {"id": "C1", "grupo": "Cuartos 1", "origen1": "O1", "origen2": "O2", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "C2", "grupo": "Cuartos 2", "origen1": "O3", "origen2": "O4", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "C3", "grupo": "Cuartos 3", "origen1": "O5", "origen2": "O6", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "C4", "grupo": "Cuartos 4", "origen1": "O7", "origen2": "O8", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "C1", "grupo": "Cuartos 1", "origen1": "O1", "origen2": "O2", "fecha": "2026-07-09", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "C2", "grupo": "Cuartos 2", "origen1": "O3", "origen2": "O4", "fecha": "2026-07-10", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "C3", "grupo": "Cuartos 3", "origen1": "O5", "origen2": "O6", "fecha": "2026-07-11", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "C4", "grupo": "Cuartos 4", "origen1": "O7", "origen2": "O8", "fecha": "2026-07-11", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "semis": [
-            {"id": "S1", "grupo": "Semifinal 1", "origen1": "C1", "origen2": "C2", "fecha": "2026-07-09", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "S2", "grupo": "Semifinal 2", "origen1": "C3", "origen2": "C4", "fecha": "2026-07-10", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "S1", "grupo": "Semifinal 1", "origen1": "C1", "origen2": "C2", "fecha": "2026-07-14", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "S2", "grupo": "Semifinal 2", "origen1": "C3", "origen2": "C4", "fecha": "2026-07-15", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "final": [
             {"id": "F1", "grupo": "Final", "origen1": "S1", "origen2": "S2", "fecha": "2026-07-19", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
@@ -266,18 +284,34 @@ def init_db():
     if not load_data(DB_PREDICTIONS): save_data({}, DB_PREDICTIONS)
     if not load_data(DB_SPECIALS): save_data({}, DB_SPECIALS)
     
-    if not load_data(DB_SETTINGS):
+    settings = load_data(DB_SETTINGS)
+    if not settings:
         save_data({
             "fase_actual": "fase_grupos", 
             "campeon_oficial": None, 
             "vice_oficial": None,
+            "dieciseisavos_oficial": [],
             "octavos_oficial": [],
             "cuartos_oficial": [],
             "semis_oficial": []
         }, DB_SETTINGS)
+    elif "dieciseisavos_oficial" not in settings:
+        # MIGRACIÓN SEGURA DE SETTINGS: Actualiza si es base antigua
+        settings["dieciseisavos_oficial"] = []
+        save_data(settings, DB_SETTINGS)
             
-    if not load_data(DB_MATCHES):
+    matches = load_data(DB_MATCHES)
+    if not matches:
         save_data(get_initial_matches(), DB_MATCHES)
+    elif "dieciseisavos" not in matches:
+        # MIGRACIÓN SEGURA DE PARTIDOS: Actualiza el árbol sin borrar fase_grupos
+        new_matches = get_initial_matches()
+        matches["dieciseisavos"] = new_matches["dieciseisavos"]
+        matches["octavos"] = new_matches["octavos"]
+        matches["cuartos"] = new_matches["cuartos"]
+        matches["semis"] = new_matches["semis"]
+        matches["final"] = new_matches["final"]
+        save_data(matches, DB_MATCHES)
 
 # ==========================================
 # UTILIDADES Y ÁRBOL DINÁMICO
@@ -311,7 +345,7 @@ def resolve_user_team(m_id, slot, matches_dict, user_preds):
         else: return "Por Definir" 
     else:
         base_name = p.get(f"equipo{slot}")
-        if m_id.startswith("O"): # Si es octavos, el usuario selecciona el equipo de la lista
+        if m_id.startswith("D"): # Ahora el usuario selecciona el equipo manualmente en Dieciseisavos (D)
             return user_preds.get(m_id, {}).get(f"equipo{slot}", base_name)
         return base_name
 
@@ -327,7 +361,7 @@ def resolve_admin_team(m_id, slot, matches_dict):
         else: return "Por Definir"
     else:
         base_name = p.get(f"equipo{slot}")
-        if m_id.startswith("O"):
+        if m_id.startswith("D"): # Selección de administrador en Dieciseisavos
             return p.get(f"equipo{slot}_real", base_name)
         return base_name
 
@@ -534,8 +568,8 @@ def mostrar_pantalla_pronosticos():
             
             col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
             
-            # EL USUARIO ELIGE LOS PAISES EN OCTAVOS
-            if fase_sel == "octavos":
+            # EL USUARIO ELIGE LOS PAISES A PARTIR DE LOS DIECISEISAVOS (48 EQUIPOS MUNDIAL)
+            if fase_sel == "dieciseisavos":
                 base_eq1 = p['equipo1']
                 base_eq2 = p['equipo2']
                 
@@ -606,7 +640,7 @@ def mostrar_predicciones_especiales():
     user_email = st.session_state['user']
     
     if user_email not in specials: 
-        specials[user_email] = {"octavos": [], "cuartos": [], "semis": [], "campeon": "", "vicecampeon": ""}
+        specials[user_email] = {"dieciseisavos": [], "octavos": [], "cuartos": [], "semis": [], "campeon": "", "vicecampeon": ""}
     
     mis_specials = specials[user_email]
 
@@ -615,22 +649,25 @@ def mostrar_predicciones_especiales():
         
         col1, col2 = st.columns(2)
         with col1:
-            octavos_sel = st.multiselect("⚽ Clasificados a OCTAVOS (Máx 16) | +5 pts c/u", EQUIPOS_MUNDIAL, default=mis_specials.get("octavos", []), max_selections=16, disabled=not puede_editar)
-            cuartos_sel = st.multiselect("🔥 Clasificados a CUARTOS (Máx 8) | +7 pts c/u", EQUIPOS_MUNDIAL, default=mis_specials.get("cuartos", []), max_selections=8, disabled=not puede_editar)
+            dieciseisavos_sel = st.multiselect("🌟 A DIECISEISAVOS (Máx 32) | +2 pts", EQUIPOS_MUNDIAL, default=mis_specials.get("dieciseisavos", []), max_selections=32, disabled=not puede_editar)
+            octavos_sel = st.multiselect("⚽ A OCTAVOS (Máx 16) | +5 pts", EQUIPOS_MUNDIAL, default=mis_specials.get("octavos", []), max_selections=16, disabled=not puede_editar)
         with col2:
-            semis_sel = st.multiselect("🌟 Clasificados a SEMIS (Máx 4) | +10 pts c/u", EQUIPOS_MUNDIAL, default=mis_specials.get("semis", []), max_selections=4, disabled=not puede_editar)
+            cuartos_sel = st.multiselect("🔥 A CUARTOS (Máx 8) | +7 pts", EQUIPOS_MUNDIAL, default=mis_specials.get("cuartos", []), max_selections=8, disabled=not puede_editar)
+            semis_sel = st.multiselect("🌟 A SEMIS (Máx 4) | +10 pts", EQUIPOS_MUNDIAL, default=mis_specials.get("semis", []), max_selections=4, disabled=not puede_editar)
             
-            st.divider()
-            
+        st.divider()
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
             idx_campeon = EQUIPOS_MUNDIAL.index(mis_specials.get("campeon")) if mis_specials.get("campeon") in EQUIPOS_MUNDIAL else 0
-            idx_vice = EQUIPOS_MUNDIAL.index(mis_specials.get("vicecampeon")) if mis_specials.get("vicecampeon") in EQUIPOS_MUNDIAL else 0
-            
             campeon_sel = st.selectbox("🏆 CAMPEÓN del Mundo | +20 pts", [""] + EQUIPOS_MUNDIAL, index=idx_campeon+1 if mis_specials.get("campeon") else 0, disabled=not puede_editar)
+        with col_c2:
+            idx_vice = EQUIPOS_MUNDIAL.index(mis_specials.get("vicecampeon")) if mis_specials.get("vicecampeon") in EQUIPOS_MUNDIAL else 0
             vice_sel = st.selectbox("🥈 VICECAMPEÓN | +15 pts", [""] + EQUIPOS_MUNDIAL, index=idx_vice+1 if mis_specials.get("vicecampeon") else 0, disabled=not puede_editar)
 
         if puede_editar:
             if st.form_submit_button("Guardar Equipos Clasificados", type="primary"):
                 specials[user_email] = {
+                    "dieciseisavos": dieciseisavos_sel,
                     "octavos": octavos_sel,
                     "cuartos": cuartos_sel,
                     "semis": semis_sel,
@@ -656,6 +693,7 @@ def mostrar_tabla_posiciones():
 
     tabla_data = []
 
+    oficial_dieciseisavos = settings.get("dieciseisavos_oficial", [])
     oficial_octavos = settings.get("octavos_oficial", [])
     oficial_cuartos = settings.get("cuartos_oficial", [])
     oficial_semis = settings.get("semis_oficial", [])
@@ -696,6 +734,8 @@ def mostrar_tabla_posiciones():
                             puntos_totales += pts
             
             # 2. Puntos por Equipos Clasificados (Listas Especiales)
+            for equipo in user_specials.get("dieciseisavos", []):
+                if equipo in oficial_dieciseisavos: puntos_totales += 2
             for equipo in user_specials.get("octavos", []):
                 if equipo in oficial_octavos: puntos_totales += 5
             for equipo in user_specials.get("cuartos", []):
@@ -768,10 +808,12 @@ def admin_ver_pronosticos():
     
     st.subheader("🌟 Predicciones Especiales (Clasificados)")
     
+    die_txt = ", ".join(user_specials.get("dieciseisavos", [])) if user_specials.get("dieciseisavos") else "Ninguno"
     oct_txt = ", ".join(user_specials.get("octavos", [])) if user_specials.get("octavos") else "Ninguno"
     cua_txt = ", ".join(user_specials.get("cuartos", [])) if user_specials.get("cuartos") else "Ninguno"
     sem_txt = ", ".join(user_specials.get("semis", [])) if user_specials.get("semis") else "Ninguno"
     
+    st.write(f"**🌟 A Dieciseisavos:** {die_txt}")
     st.write(f"**⚽ A Octavos:** {oct_txt}")
     st.write(f"**🔥 A Cuartos:** {cua_txt}")
     st.write(f"**🌟 A Semis:** {sem_txt}")
@@ -917,6 +959,7 @@ def admin_ver_tablas():
 
     tabla_data = []
     
+    oficial_dieciseisavos = settings.get("dieciseisavos_oficial", [])
     oficial_octavos = settings.get("octavos_oficial", [])
     oficial_cuartos = settings.get("cuartos_oficial", [])
     oficial_semis = settings.get("semis_oficial", [])
@@ -954,6 +997,8 @@ def admin_ver_tablas():
                             )
                             puntos_totales += pts
             
+            for equipo in user_specials.get("dieciseisavos", []):
+                if equipo in oficial_dieciseisavos: puntos_totales += 2
             for equipo in user_specials.get("octavos", []):
                 if equipo in oficial_octavos: puntos_totales += 5
             for equipo in user_specials.get("cuartos", []):
@@ -1007,7 +1052,7 @@ def admin_sandbox_resultados():
             
             col1, col2, col3, col4 = st.columns(4)
             
-            if fase_sel == "octavos":
+            if fase_sel == "dieciseisavos":
                 base_eq1 = p['equipo1']
                 base_eq2 = p['equipo2']
                 idx1 = EQUIPOS_MUNDIAL.index(p.get("equipo1_real")) + 1 if p.get("equipo1_real") in EQUIPOS_MUNDIAL else 0
@@ -1073,6 +1118,7 @@ def admin_gestion_fases():
         
         col1, col2 = st.columns(2)
         with col1:
+            dieciseisavos_oficial = st.multiselect("🌟 32 Equipos en DIECISEISAVOS", EQUIPOS_MUNDIAL, default=settings.get("dieciseisavos_oficial", []), max_selections=32)
             oct_oficial = st.multiselect("⚽ 16 Equipos Oficiales en OCTAVOS", EQUIPOS_MUNDIAL, default=settings.get("octavos_oficial", []), max_selections=16)
             cua_oficial = st.multiselect("🔥 8 Equipos Oficiales en CUARTOS", EQUIPOS_MUNDIAL, default=settings.get("cuartos_oficial", []), max_selections=8)
         with col2:
@@ -1086,6 +1132,7 @@ def admin_gestion_fases():
 
         if st.form_submit_button("Guardar Clasificados Oficiales", type="primary"):
             settings["fase_actual"] = nueva_fase
+            settings["dieciseisavos_oficial"] = dieciseisavos_oficial
             settings["octavos_oficial"] = oct_oficial
             settings["cuartos_oficial"] = cua_oficial
             settings["semis_oficial"] = sem_oficial
