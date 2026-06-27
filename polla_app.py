@@ -332,7 +332,6 @@ def get_match_by_id(matches_dict, m_id):
             if m["id"] == m_id: return m
     return None
 
-# Resuelve el nombre del equipo en base al árbol del ADMIN (La Realidad)
 def resolve_admin_team(m_id, slot, matches_dict):
     p = get_match_by_id(matches_dict, m_id)
     if f"origen{slot}" in p:
@@ -547,7 +546,6 @@ def mostrar_pantalla_pronosticos():
             
             col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
             
-            # AUTOMATIZACIÓN: Usamos siempre la realidad dictada por el Admin
             eq1_name = resolve_admin_team(m_id, 1, matches) if fase_sel != "fase_grupos" else p['equipo1']
             eq2_name = resolve_admin_team(m_id, 2, matches) if fase_sel != "fase_grupos" else p['equipo2']
             
@@ -562,10 +560,10 @@ def mostrar_pantalla_pronosticos():
             
             clasif_ui = None
             if fase_sel != "fase_grupos":
-                st.write("<div style='text-align: center;'><small style='color: gray;'>Ganador por Penales (ÚNICAMENTE si arriba pones empate)</small></div>", unsafe_allow_html=True)
+                st.write("<div style='text-align: center;'><small style='color: gray;'>Desempate: ¿Quién clasifica? (OBLIGATORIO si pusiste empate arriba)</small></div>", unsafe_allow_html=True)
                 col_esp1, col_penales, col_esp2 = st.columns([1, 2, 1])
                 with col_penales:
-                    opciones_clasif_txt = ["- Selecciona al ganador de Penales -", eq1_name, eq2_name]
+                    opciones_clasif_txt = ["- Selecciona quién avanza -", eq1_name, eq2_name]
                     opciones_clasif_val = [None, "equipo1", "equipo2"]
                     
                     prev_clasif = pred_prev.get("clasifica")
@@ -575,7 +573,6 @@ def mostrar_pantalla_pronosticos():
 
             st.divider()
             
-            # AUTOMATIZACIÓN de cálculos (Se procesan silenciosamente)
             ganador_calc = determinar_ganador(g1, g2)
             clasifica_final = None
             
@@ -588,9 +585,19 @@ def mostrar_pantalla_pronosticos():
 
         if puede_editar:
             if st.form_submit_button("Guardar Pronósticos de Partidos", type="primary"):
-                predictions[user_email].update(nuevos_pronosticos)
-                save_data(predictions, DB_PREDICTIONS)
-                st.success("¡Pronósticos guardados correctamente!")
+                errores = False
+                if fase_sel != "fase_grupos":
+                    for m_id, p_data in nuevos_pronosticos.items():
+                        if p_data["goles1"] == p_data["goles2"] and p_data["clasifica"] is None:
+                            errores = True
+                            break
+                            
+                if errores:
+                    st.error("⚠️ Tienes uno o más partidos con empate donde no seleccionaste quién clasifica. Revisa y elige un ganador para el desempate antes de guardar.")
+                else:
+                    predictions[user_email].update(nuevos_pronosticos)
+                    save_data(predictions, DB_PREDICTIONS)
+                    st.success("¡Pronósticos guardados correctamente!")
         else:
              st.form_submit_button("Guardar Pronósticos", disabled=True)
 
@@ -1008,11 +1015,11 @@ def admin_sandbox_resultados():
             with col3: jugado = st.checkbox("Finalizado", value=p.get("jugado", False), key=f"jugado_{m_id}")
             with col4: 
                 if fase_sel != "fase_grupos":
-                    opc_clas_txt = ["- Selecciona Penales -", eq1_display, eq2_display]
+                    opc_clas_txt = ["- Selecciona al clasificado -", eq1_display, eq2_display]
                     opc_clas_val = [None, "equipo1", "equipo2"]
                     prev_clasif = p.get("clasifica")
                     idx_cl = opc_clas_val.index(prev_clasif) if prev_clasif in opc_clas_val else 0
-                    st.write("<small>Penales (Solo Empate)</small>", unsafe_allow_html=True)
+                    st.write("<small>Desempate: ¿Quién clasifica?</small>", unsafe_allow_html=True)
                     clas_ui = st.selectbox("Penales", opc_clas_txt, index=idx_cl, key=f"clasif_{m_id}", label_visibility="collapsed")
                     
                     if g1 > g2: p["clasifica"] = "equipo1"
@@ -1026,8 +1033,17 @@ def admin_sandbox_resultados():
             st.divider()
 
         if st.form_submit_button("Guardar Resultados Reales", type="primary"):
-            save_data(matches, DB_MATCHES)
-            st.success("¡Resultados y equipos guardados! Todos los usuarios verán esto en sus pantallas.")
+            errores = False
+            if fase_sel != "fase_grupos":
+                for p_data in partidos_fase:
+                    if p_data.get("jugado") and p_data.get("goles1") == p_data.get("goles2") and p_data.get("clasifica") is None:
+                        errores = True
+                        break
+            if errores:
+                st.error("⚠️ Tienes partidos finalizados en empate donde no elegiste qué equipo avanzó. ¡Es obligatorio seleccionar al clasificado para poder guardar!")
+            else:
+                save_data(matches, DB_MATCHES)
+                st.success("¡Resultados y equipos guardados! Todos los usuarios verán esto en sus pantallas.")
 
 def admin_gestion_fases():
     st.header("⚙️ Gestión de Fases y Clasificados")
