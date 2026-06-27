@@ -238,38 +238,38 @@ def get_initial_matches():
             {"id": "D2", "grupo": "16avos 2", "equipo1": "Francia", "equipo2": "Suecia", "fecha": "2026-06-30 18:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
             {"id": "D3", "grupo": "16avos 3", "equipo1": "Sudáfrica", "equipo2": "Canadá", "fecha": "2026-06-28 16:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
             {"id": "D4", "grupo": "16avos 4", "equipo1": "Países Bajos", "equipo2": "Marruecos", "fecha": "2026-06-29 22:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "D5", "grupo": "16avos 5", "equipo1": "2do Grupo K", "equipo2": "2do Grupo L", "fecha": "2026-07-02 20:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "D6", "grupo": "16avos 6", "equipo1": "España", "equipo2": "2do Grupo J", "fecha": "2026-07-02 16:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D5", "grupo": "16avos 5", "equipo1": "2° Grupo K", "equipo2": "2° Grupo L", "fecha": "2026-07-02 20:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D6", "grupo": "16avos 6", "equipo1": "España", "equipo2": "2° Grupo J", "fecha": "2026-07-02 16:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
             {"id": "D7", "grupo": "16avos 7", "equipo1": "Estados Unidos", "equipo2": "Bosnia", "fecha": "2026-07-01 21:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "D8", "grupo": "16avos 8", "equipo1": "Bélgica", "equipo2": "Mejor 3ro (A/E/H/I/J)", "fecha": "2026-07-01 17:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D8", "grupo": "16avos 8", "equipo1": "Bélgica", "equipo2": "3° Grupo A/E/H/I/J", "fecha": "2026-07-01 17:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
             {"id": "D9", "grupo": "16avos 9", "equipo1": "Brasil", "equipo2": "Japón", "fecha": "2026-06-29 14:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
             {"id": "D10", "grupo": "16avos 10", "equipo1": "Costa de Marfil", "equipo2": "Noruega", "fecha": "2026-06-30 14:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "D11", "grupo": "16avos 11", "equipo1": "México", "equipo2": "Mejor 3ro (C/E/F/H/I)", "fecha": "2026-06-30 22:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "D12", "grupo": "16avos 12", "equipo1": "1ro Grupo L", "equipo2": "Mejor 3ro (E/H/I/J/K)", "fecha": "2026-07-01 13:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D11", "grupo": "16avos 11", "equipo1": "México", "equipo2": "3° Grupo C/E/F/H/I", "fecha": "2026-06-30 22:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D12", "grupo": "16avos 12", "equipo1": "1° Grupo L", "equipo2": "3° Grupo E/H/I/J/K", "fecha": "2026-07-01 13:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
             {"id": "D13", "grupo": "16avos 13", "equipo1": "Argentina", "equipo2": "Cabo Verde", "fecha": "2026-07-03 19:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
             {"id": "D14", "grupo": "16avos 14", "equipo1": "Australia", "equipo2": "Egipto", "fecha": "2026-07-03 15:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "D15", "grupo": "16avos 15", "equipo1": "Suiza", "equipo2": "Mejor 3ro (E/F/G/I/J)", "fecha": "2026-07-03 00:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "D16", "grupo": "16avos 16", "equipo1": "1ro Grupo K", "equipo2": "Mejor 3ro (D/E/I/J/L)", "fecha": "2026-07-03 22:30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "D15", "grupo": "16avos 15", "equipo1": "Suiza", "equipo2": "3° Grupo E/F/G/I/J", "fecha": "2026-07-03 00:00", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "D16", "grupo": "16avos 16", "equipo1": "1° Grupo K", "equipo2": "3° Grupo D/E/I/J/L", "fecha": "2026-07-03 22:30", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "octavos": [
-            {"id": "O1", "grupo": "Cuartos 1", "origen1": "D1", "origen2": "D2", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O2", "grupo": "Cuartos 2", "origen1": "D3", "origen2": "D4", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O3", "grupo": "Cuartos 3", "origen1": "D5", "origen2": "D6", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O4", "grupo": "Cuartos 4", "origen1": "D7", "origen2": "D8", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O5", "grupo": "Cuartos 5", "origen1": "D9", "origen2": "D10", "fecha": "2026-07-06", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O6", "grupo": "Cuartos 6", "origen1": "D11", "origen2": "D12", "fecha": "2026-07-06", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O7", "grupo": "Cuartos 7", "origen1": "D13", "origen2": "D14", "fecha": "2026-07-07", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "O8", "grupo": "Cuartos 8", "origen1": "D15", "origen2": "D16", "fecha": "2026-07-07", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "O1", "grupo": "Octavos 1", "origen1": "D1", "origen2": "D2", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O2", "grupo": "Octavos 2", "origen1": "D3", "origen2": "D4", "fecha": "2026-07-04", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O3", "grupo": "Octavos 3", "origen1": "D5", "origen2": "D6", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O4", "grupo": "Octavos 4", "origen1": "D7", "origen2": "D8", "fecha": "2026-07-05", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O5", "grupo": "Octavos 5", "origen1": "D9", "origen2": "D10", "fecha": "2026-07-06", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O6", "grupo": "Octavos 6", "origen1": "D11", "origen2": "D12", "fecha": "2026-07-06", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O7", "grupo": "Octavos 7", "origen1": "D13", "origen2": "D14", "fecha": "2026-07-07", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "O8", "grupo": "Octavos 8", "origen1": "D15", "origen2": "D16", "fecha": "2026-07-07", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "cuartos": [
-            {"id": "C1", "grupo": "Semifinal 1", "origen1": "O1", "origen2": "O2", "fecha": "2026-07-09", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "C2", "grupo": "Semifinal 2", "origen1": "O3", "origen2": "O4", "fecha": "2026-07-10", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "C3", "grupo": "Semifinal 3", "origen1": "O5", "origen2": "O6", "fecha": "2026-07-11", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "C4", "grupo": "Semifinal 4", "origen1": "O7", "origen2": "O8", "fecha": "2026-07-11", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "C1", "grupo": "Cuartos 1", "origen1": "O1", "origen2": "O2", "fecha": "2026-07-09", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "C2", "grupo": "Cuartos 2", "origen1": "O3", "origen2": "O4", "fecha": "2026-07-10", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "C3", "grupo": "Cuartos 3", "origen1": "O5", "origen2": "O6", "fecha": "2026-07-11", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "C4", "grupo": "Cuartos 4", "origen1": "O7", "origen2": "O8", "fecha": "2026-07-11", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "semis": [
-            {"id": "S1", "grupo": "Final 1", "origen1": "C1", "origen2": "C2", "fecha": "2026-07-14", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
-            {"id": "S2", "grupo": "Final 2", "origen1": "C3", "origen2": "C4", "fecha": "2026-07-15", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
+            {"id": "S1", "grupo": "Semifinal 1", "origen1": "C1", "origen2": "C2", "fecha": "2026-07-14", "goles1": None, "goles2": None, "jugado": False, "clasifica": None},
+            {"id": "S2", "grupo": "Semifinal 2", "origen1": "C3", "origen2": "C4", "fecha": "2026-07-15", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
         ],
         "final": [
             {"id": "F1", "grupo": "Gran Final", "origen1": "S1", "origen2": "S2", "fecha": "2026-07-19", "goles1": None, "goles2": None, "jugado": False, "clasifica": None}
