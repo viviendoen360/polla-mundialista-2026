@@ -1150,6 +1150,23 @@ def admin_sandbox_resultados():
 def admin_gestion_fases():
     st.header("⚙️ Gestión de Fases y Clasificados")
     
+    # --- INICIO DE BOTÓN TEMPORAL ---
+    if st.button("Actualizar llaves de 16avos (Seguro)"):
+        matches = load_data(DB_MATCHES)
+        nuevos_partidos = get_initial_matches()
+        
+        # Sobrescribimos SOLO las fases eliminatorias. La fase de grupos queda intacta.
+        for fase in ["dieciseisavos", "octavos", "cuartos", "semis", "final"]:
+            matches[fase] = nuevos_partidos[fase]
+            
+        save_data(matches, DB_MATCHES)
+        st.success("¡Base de datos actualizada con la nueva estructura oficial!")
+    # --- FIN DE BOTÓN TEMPORAL ---
+
+    settings = load_data(DB_SETTINGS)
+    # ... (Aquí continúa tu código normal con el with st.form("form_fases"): etc.)
+    st.header("⚙️ Gestión de Fases y Clasificados")
+    
     settings = load_data(DB_SETTINGS)
     
     with st.form("form_fases"):
