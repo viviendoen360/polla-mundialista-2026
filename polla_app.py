@@ -332,19 +332,86 @@ def get_match_by_id(matches_dict, m_id):
             if m["id"] == m_id: return m
     return None
 
-def resolve_admin_team(m_id, slot, matches_dict):
+def calcular_posiciones_grupos(matches_dict):
+    """Calcula automáticamente los clasificados leyendo el progreso de los grupos"""
+    standings = {}
+    for p in matches_dict.get("fase_grupos", []):
+        t1, t2 = p['equipo1'], p['equipo2']
+        if t1 not in standings: standings[t1] = {'pts': 0, 'gd': 0, 'gf': 0, 'grp': p['grupo']}
+        if t2 not in standings: standings[t2] = {'pts': 0, 'gd': 0, 'gf': 0, 'grp': p['grupo']}
+
+        if p.get("jugado"):
+            g1, g2 = p.get('goles1'), p.get('goles2')
+            if g1 is not None and g2 is not None:
+                standings[t1]['gf'] += g1
+                standings[t2]['gf'] += g2
+                standings[t1]['gd'] += (g1 - g2)
+                standings[t2]['gd'] += (g2 - g1)
+                if g1 > g2: standings[t1]['pts'] += 3
+                elif g2 > g1: standings[t2]['pts'] += 3
+                else:
+                    standings[t1]['pts'] += 1
+                    standings[t2]['pts'] += 1
+
+    groups = {}
+    for t, data in standings.items():
+        grp = data['grp']
+        if grp not in groups: groups[grp] = []
+        groups[grp].append({'team': t, 'pts': data['pts'], 'gd': data['gd'], 'gf': data['gf']})
+
+    mapping = {}
+    thirds = []
+    for grp, teams in groups.items():
+        # Ordenamos por Puntos, luego Diferencia de Goles, luego Goles a Favor
+        teams.sort(key=lambda x: (x['pts'], x['gd'], x['gf']), reverse=True)
+        grp_letter = grp.replace("Grupo ", "")
+        if len(teams) > 0: mapping[f"1ro Grupo {grp_letter}"] = teams[0]['team']
+        if len(teams) > 1: mapping[f"2do Grupo {grp_letter}"] = teams[1]['team']
+        if len(teams) > 2: thirds.append(teams[2])
+
+    # Ordenamos a todos los terceros para sacar a los 8 mejores
+    thirds.sort(key=lambda x: (x['pts'], x['gd'], x['gf']), reverse=True)
+    for i in range(min(8, len(thirds))):
+        mapping[f"Mejor 3ro ({i+1})"] = thirds[i]['team']
+
+    return mapping
+
+# Resuelve el equipo leyendo la base (la realidad calculada o forzada)
+def resolve_admin_team(m_id, slot, matches_dict, mappings):
     p = get_match_by_id(matches_dict, m_id)
     if f"origen{slot}" in p:
         origen_id = p[f"origen{slot}"]
         origin_p = get_match_by_id(matches_dict, origen_id)
         clasifica = origin_p.get("clasifica")
-        if clasifica == "equipo1": return resolve_admin_team(origen_id, 1, matches_dict)
-        elif clasifica == "equipo2": return resolve_admin_team(origen_id, 2, matches_dict)
+        if clasifica == "equipo1": return resolve_admin_team(origen_id, 1, matches_dict, mappings)
+        elif clasifica == "equipo2": return resolve_admin_team(origen_id, 2, matches_dict, mappings)
         else: return "Por Definir"
     else:
+        # Base de Dieciseisavos
         base_name = p.get(f"equipo{slot}")
-        if m_id.startswith("D"): 
-            return p.get(f"equipo{slot}_real", base_name)
+        real_name = p.get(f"equipo{slot}_real")
+        
+        # Si el admin lo sobreescribió en Sandbox, manda ese
+        if real_name and real_name != base_name: return real_name
+        # Si no, usa lo que calculó la app de la fase de grupos
+        if mappings and base_name in mappings: return mappings[base_name]
+        return base_name
+
+# Resuelve el equipo leyendo las predicciones DEL USUARIO para que armen su llave
+def resolve_user_team(m_id, slot, matches_dict, user_preds, mappings):
+    p = get_match_by_id(matches_dict, m_id)
+    if f"origen{slot}" in p:
+        origen_id = p[f"origen{slot}"]
+        clasifica = user_preds.get(origen_id, {}).get("clasifica")
+        if clasifica == "equipo1": return resolve_user_team(origen_id, 1, matches_dict, user_preds, mappings)
+        elif clasifica == "equipo2": return resolve_user_team(origen_id, 2, matches_dict, user_preds, mappings)
+        else: return "Por Definir" 
+    else:
+        # Los equipos base (Dieciseisavos) sí se halan de la realidad/cálculo
+        base_name = p.get(f"equipo{slot}")
+        real_name = p.get(f"equipo{slot}_real")
+        if real_name and real_name != base_name: return real_name
+        if mappings and base_name in mappings: return mappings[base_name]
         return base_name
 
 def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, real_goles1, real_goles2, real_ganador):
@@ -448,6 +515,7 @@ def mostrar_resultados_oficiales():
     
     matches = load_data(DB_MATCHES)
     settings = load_data(DB_SETTINGS)
+    mappings = calcular_posiciones_grupos(matches)
 
     col_filtro1, col_filtro2 = st.columns(2)
     with col_filtro1:
@@ -472,8 +540,8 @@ def mostrar_resultados_oficiales():
         
     for p in partidos_fase:
         m_id = p["id"]
-        eq1_name = resolve_admin_team(m_id, 1, matches) if fase_sel != "fase_grupos" else p['equipo1']
-        eq2_name = resolve_admin_team(m_id, 2, matches) if fase_sel != "fase_grupos" else p['equipo2']
+        eq1_name = resolve_admin_team(m_id, 1, matches, mappings) if fase_sel != "fase_grupos" else p['equipo1']
+        eq2_name = resolve_admin_team(m_id, 2, matches, mappings) if fase_sel != "fase_grupos" else p['equipo2']
         
         st.markdown(f"**{p.get('grupo', '')}** | Fecha: {p['fecha']}")
         
@@ -492,12 +560,13 @@ def mostrar_resultados_oficiales():
 
 def mostrar_pantalla_pronosticos():
     st.header("Mis Pronósticos (Árbol de Partidos)")
-    st.write("Acierta los goles. La app calculará automáticamente quién gana y quién avanza.")
+    st.write("Acierta los goles. La app calculará automáticamente quién gana y quién avanza para armar TU propia llave hacia la final.")
     
     matches = load_data(DB_MATCHES)
     settings = load_data(DB_SETTINGS)
     predictions = load_data(DB_PREDICTIONS)
     user_email = st.session_state['user']
+    mappings = calcular_posiciones_grupos(matches)
     
     if user_email not in predictions: predictions[user_email] = {}
 
@@ -546,8 +615,9 @@ def mostrar_pantalla_pronosticos():
             
             col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
             
-            eq1_name = resolve_admin_team(m_id, 1, matches) if fase_sel != "fase_grupos" else p['equipo1']
-            eq2_name = resolve_admin_team(m_id, 2, matches) if fase_sel != "fase_grupos" else p['equipo2']
+            # AUTOMATIZACIÓN: Usamos el árbol predictivo del usuario apoyado por los cálculos automáticos de la base
+            eq1_name = resolve_user_team(m_id, 1, matches, predictions[user_email], mappings) if fase_sel != "fase_grupos" else p['equipo1']
+            eq2_name = resolve_user_team(m_id, 2, matches, predictions[user_email], mappings) if fase_sel != "fase_grupos" else p['equipo2']
             
             with col1: st.write(f"<h5 style='text-align: right; color:#00ff87;'>{eq1_name}</h5>", unsafe_allow_html=True)
             with col5: st.write(f"<h5 style='color:#00ff87;'>{eq2_name}</h5>", unsafe_allow_html=True)
@@ -597,7 +667,7 @@ def mostrar_pantalla_pronosticos():
                 else:
                     predictions[user_email].update(nuevos_pronosticos)
                     save_data(predictions, DB_PREDICTIONS)
-                    st.success("¡Pronósticos guardados correctamente!")
+                    st.success("¡Pronósticos guardados correctamente! Tus ganadores han avanzado a la siguiente fase en tu menú.")
         else:
              st.form_submit_button("Guardar Pronósticos", disabled=True)
 
@@ -664,6 +734,7 @@ def mostrar_tabla_posiciones():
     predictions = load_data(DB_PREDICTIONS)
     specials = load_data(DB_SPECIALS)
     settings = load_data(DB_SETTINGS)
+    mappings = calcular_posiciones_grupos(matches)
 
     grupo_sel = st.selectbox("Ver tabla de:", ["Mi Grupo (" + st.session_state['grupo'] + ")", "Familia", "Amigos", "Trabajo"])
     grupo_filtro = st.session_state['grupo'] if grupo_sel.startswith("Mi Grupo") else grupo_sel
@@ -689,6 +760,16 @@ def mostrar_tabla_posiciones():
                     if p["jugado"]:
                         m_id = p["id"]
                         if m_id in user_preds:
+                            # Verificamos si el usuario le atinó a los equipos exactos del cruce en su llave predictiva
+                            if fase != "fase_grupos":
+                                user_eq1 = resolve_user_team(m_id, 1, matches, user_preds, mappings)
+                                user_eq2 = resolve_user_team(m_id, 2, matches, user_preds, mappings)
+                                real_eq1 = resolve_admin_team(m_id, 1, matches, mappings)
+                                real_eq2 = resolve_admin_team(m_id, 2, matches, mappings)
+                                
+                                if user_eq1 != real_eq1 or user_eq2 != real_eq2:
+                                    continue 
+
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
                             real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
                             
@@ -757,6 +838,7 @@ def admin_ver_pronosticos():
     predictions = load_data(DB_PREDICTIONS)
     specials = load_data(DB_SPECIALS)
     matches = load_data(DB_MATCHES)
+    mappings = calcular_posiciones_grupos(matches)
     
     lista_usuarios = {email: u["nombre"] + f" ({u['grupo']})" for email, u in users.items() if u.get("rol") != "admin"}
     
@@ -798,8 +880,8 @@ def admin_ver_pronosticos():
     for p in partidos_fase:
         m_id = p["id"]
         
-        eq1 = resolve_admin_team(m_id, 1, matches) if fase_sel != "fase_grupos" else p['equipo1']
-        eq2 = resolve_admin_team(m_id, 2, matches) if fase_sel != "fase_grupos" else p['equipo2']
+        eq1 = resolve_user_team(m_id, 1, matches, user_preds, mappings) if fase_sel != "fase_grupos" else p['equipo1']
+        eq2 = resolve_user_team(m_id, 2, matches, user_preds, mappings) if fase_sel != "fase_grupos" else p['equipo2']
         
         if m_id in user_preds:
             pred = user_preds[m_id]
@@ -820,10 +902,10 @@ def admin_ver_pronosticos():
             g1, g2, ganador_txt, clasifica_txt = "-", "-", "-", "-"
             
         tabla_partidos.append({
-            "Partido": f"{eq1} vs {eq2}",
+            "Partido (Árbol del Usuario)": f"{eq1} vs {eq2}",
             "Marcador": f"{g1} - {g2}",
             "Tendencia 90m": ganador_txt,
-            "Avanza (Si aplica)": clasifica_txt
+            "Avanza": clasifica_txt
         })
         
     if tabla_partidos:
@@ -902,6 +984,7 @@ def admin_ver_tablas():
     predictions = load_data(DB_PREDICTIONS)
     specials = load_data(DB_SPECIALS)
     settings = load_data(DB_SETTINGS)
+    mappings = calcular_posiciones_grupos(matches)
 
     grupo_sel = st.selectbox("Seleccionar Grupo a visualizar:", ["Todos", "Familia", "Amigos", "Trabajo"])
 
@@ -927,6 +1010,15 @@ def admin_ver_tablas():
                     if p["jugado"]:
                         m_id = p["id"]
                         if m_id in user_preds:
+                            if fase != "fase_grupos":
+                                user_eq1 = resolve_user_team(m_id, 1, matches, user_preds, mappings)
+                                user_eq2 = resolve_user_team(m_id, 2, matches, user_preds, mappings)
+                                real_eq1 = resolve_admin_team(m_id, 1, matches, mappings)
+                                real_eq2 = resolve_admin_team(m_id, 2, matches, mappings)
+                                
+                                if user_eq1 != real_eq1 or user_eq2 != real_eq2:
+                                    continue 
+
                             pred_g = user_preds[m_id].get("ganador", determinar_ganador(user_preds[m_id]["goles1"], user_preds[m_id]["goles2"]))
                             real_g = p.get("ganador_real", determinar_ganador(p["goles1"], p["goles2"]))
                             
@@ -963,9 +1055,10 @@ def admin_ver_tablas():
 
 def admin_sandbox_resultados():
     st.header("🛠️ Sandbox: Ingresar Resultados Reales")
-    st.write("Coloca los equipos clasificados y luego ingresa los marcadores reales. Todo esto se reflejará instantáneamente en la pantalla de los usuarios.")
+    st.write("La app ya calcula automáticamente a los clasificados desde la fase de grupos. Si necesitas forzar/reemplazar un equipo por un desempate raro de la FIFA, usa los desplegables.")
     
     matches = load_data(DB_MATCHES)
+    mappings = calcular_posiciones_grupos(matches)
     
     col_filtro1, col_filtro2 = st.columns(2)
     with col_filtro1:
@@ -994,11 +1087,20 @@ def admin_sandbox_resultados():
             if fase_sel == "dieciseisavos":
                 base_eq1 = p['equipo1']
                 base_eq2 = p['equipo2']
-                idx1 = EQUIPOS_MUNDIAL.index(p.get("equipo1_real")) + 1 if p.get("equipo1_real") in EQUIPOS_MUNDIAL else 0
-                idx2 = EQUIPOS_MUNDIAL.index(p.get("equipo2_real")) + 1 if p.get("equipo2_real") in EQUIPOS_MUNDIAL else 0
                 
-                with col1: eq1_name = st.selectbox(f"Reemplazar {base_eq1} por:", [base_eq1] + EQUIPOS_MUNDIAL, index=idx1, key=f"rsel1_{m_id}")
-                with col2: eq2_name = st.selectbox(f"Reemplazar {base_eq2} por:", [base_eq2] + EQUIPOS_MUNDIAL, index=idx2, key=f"rsel2_{m_id}")
+                # Lo que calculó la matemática de los grupos
+                calc_eq1 = mappings.get(base_eq1, base_eq1)
+                calc_eq2 = mappings.get(base_eq2, base_eq2)
+                
+                # Lo que está forzado actualmente en base de datos (o usar cálculo)
+                current_eq1 = p.get("equipo1_real") or calc_eq1
+                current_eq2 = p.get("equipo2_real") or calc_eq2
+                
+                idx1 = EQUIPOS_MUNDIAL.index(current_eq1) + 1 if current_eq1 in EQUIPOS_MUNDIAL else 0
+                idx2 = EQUIPOS_MUNDIAL.index(current_eq2) + 1 if current_eq2 in EQUIPOS_MUNDIAL else 0
+                
+                with col1: eq1_name = st.selectbox(f"[{base_eq1}] Forzar:", [base_eq1] + EQUIPOS_MUNDIAL, index=idx1, key=f"rsel1_{m_id}")
+                with col2: eq2_name = st.selectbox(f"[{base_eq2}] Forzar:", [base_eq2] + EQUIPOS_MUNDIAL, index=idx2, key=f"rsel2_{m_id}")
                 
                 p["equipo1_real"] = eq1_name if eq1_name != base_eq1 else None
                 p["equipo2_real"] = eq2_name if eq2_name != base_eq2 else None
@@ -1006,8 +1108,8 @@ def admin_sandbox_resultados():
                 eq1_display = eq1_name
                 eq2_display = eq2_name
             else:
-                eq1_display = resolve_admin_team(m_id, 1, matches) if fase_sel != "fase_grupos" else p['equipo1']
-                eq2_display = resolve_admin_team(m_id, 2, matches) if fase_sel != "fase_grupos" else p['equipo2']
+                eq1_display = resolve_admin_team(m_id, 1, matches, mappings) if fase_sel != "fase_grupos" else p['equipo1']
+                eq2_display = resolve_admin_team(m_id, 2, matches, mappings) if fase_sel != "fase_grupos" else p['equipo2']
                 st.markdown(f"**{p.get('grupo', '')}**: {eq1_display} vs {eq2_display}")
             
             with col1: g1 = st.number_input(f"Goles Eq 1", min_value=0, max_value=15, value=p.get("goles1") if p.get("goles1") is not None else 0, key=f"real_g1_{m_id}")
@@ -1043,7 +1145,7 @@ def admin_sandbox_resultados():
                 st.error("⚠️ Tienes partidos finalizados en empate donde no elegiste qué equipo avanzó. ¡Es obligatorio seleccionar al clasificado para poder guardar!")
             else:
                 save_data(matches, DB_MATCHES)
-                st.success("¡Resultados y equipos guardados! Todos los usuarios verán esto en sus pantallas.")
+                st.success("¡Resultados guardados! Tus usuarios ya verán reflejado todo en la pantalla de Posiciones Oficiales.")
 
 def admin_gestion_fases():
     st.header("⚙️ Gestión de Fases y Clasificados")
@@ -1106,6 +1208,7 @@ def admin_sincronizar_api():
                     data = response.json()
                     api_matches = data.get('matches', [])
                     matches_db = load_data(DB_MATCHES)
+                    mappings = calcular_posiciones_grupos(matches_db)
                     actualizados = 0
                     
                     map_equipos = {
@@ -1143,8 +1246,8 @@ def admin_sincronizar_api():
                             
                             for fase, partidos in matches_db.items():
                                 for p in partidos:
-                                    eq1 = resolve_admin_team(p['id'], 1, matches_db) if fase != "fase_grupos" else p['equipo1']
-                                    eq2 = resolve_admin_team(p['id'], 2, matches_db) if fase != "fase_grupos" else p['equipo2']
+                                    eq1 = resolve_admin_team(p['id'], 1, matches_db, mappings) if fase != "fase_grupos" else p['equipo1']
+                                    eq2 = resolve_admin_team(p['id'], 2, matches_db, mappings) if fase != "fase_grupos" else p['equipo2']
                                     
                                     if eq1 == h_name_esp and eq2 == a_name_esp:
                                         if not p.get('jugado') or p.get('goles1') != h_score or p.get('goles2') != a_score:
