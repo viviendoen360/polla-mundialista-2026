@@ -565,7 +565,7 @@ def mostrar_resultados_oficiales():
 
 def mostrar_pantalla_pronosticos():
     st.header("Mis Pronósticos (Árbol de Partidos)")
-    st.write("Acierta los goles. La app calculará automáticamente quién gana y quién avanza para armar TU propia llave hacia la final.")
+    st.write("Acierta los goles. La app calculará automáticamente quién gana y quién avanza.")
     
     matches = load_data(DB_MATCHES)
     settings = load_data(DB_SETTINGS)
@@ -589,116 +589,79 @@ def mostrar_pantalla_pronosticos():
             grupo_filtro = "Todos"
             st.selectbox("Sub-filtro: Grupo", ["Único"], disabled=True)
 
+    # --- CORRECCIÓN CRÍTICA: Inicializamos la variable aquí para evitar el error ---
+    partidos_fase = matches.get(fase_sel, [])
+    if grupo_filtro != "Todos":
+        partidos_fase = [p for p in partidos_fase if p.get("grupo") == grupo_filtro]
+    # -----------------------------------------------------------------------------
+
     ahora = datetime.now()
     deadline_key = "fase_grupos" if fase_sel == "fase_grupos" else "eliminatorias"
     deadline = DEADLINES.get(deadline_key, ahora + timedelta(days=1))
     puede_editar = ahora <= deadline
     
-    if puede_editar:
-        mensaje_cierre = f"Se cierra el: {deadline.strftime('%Y-%m-%d %H:%M')}"
-    else:
-        mensaje_cierre = f"La fase {FASES_NOMBRES[fase_sel]} está CERRADA para edición."
+    if puede_editar: st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | Cierre: {deadline.strftime('%Y-%m-%d %H:%M')}")
+    else: st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | FASE CERRADA.")
 
-    st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | {mensaje_cierre}")
-# Bloque de Selectores Manuales para 16avos
+    if not partidos_fase: 
+        st.write("No hay partidos en este grupo o fase.")
+        return
+
+    # EXCLUSIÓN MUTUA PARA TERCEROS (Manual)
     if fase_sel == "dieciseisavos":
-        st.subheader("🧩 Asigna a tus clasificados (Manual)")
-        cols = st.columns(4)
-        c_idx = 0
+        st.subheader("🧩 Asigna tus Mejores Terceros")
+        slots_terceros_u = []
         for p in partidos_fase:
-            for slot in [1, 2]:
-                if "3ro" in p[f"equipo{slot}"]:
-                    m_id = p["id"]
-                    key_user = f"u_sel_{m_id}_{slot}"
-                    current_val = predictions[user_email].get(m_id, {}).get(f"equipo{slot}_user", "No asignado")
-                    
-                    with cols[c_idx % 4]:
-                        seleccion = st.selectbox(f"Match {m_id} - Slot {slot}:", ["No asignado"] + EQUIPOS_MUNDIAL, 
-                                                 index=["No asignado"] + EQUIPOS_MUNDIAL.index(current_val) if current_val in EQUIPOS_MUNDIAL else 0,
-                                                 key=key_user)
-                        
-                        if seleccion != current_val:
-                            if m_id not in predictions[user_email]: predictions[user_email][m_id] = {}
-                            predictions[user_email][m_id][f"equipo{slot}_user"] = seleccion
-                            save_data(predictions, DB_PREDICTIONS)
-                            st.rerun()
-                    c_idx += 1
-        st.divider()
+            if "3ro" in p['equipo1']: slots_terceros_u.append((p["id"], "equipo1", 1, "u_dyn1_"))
+            if "3ro" in p['equipo2']: slots_terceros_u.append((p["id"], "equipo2", 2, "u_dyn2_"))
+            
+        if slots_terceros_u:
+            lista_8_terceros = [mappings[f"Mejor 3ro ({i})"] for i in range(1, 9) if f"Mejor 3ro ({i})" in mappings]
+            if not lista_8_terceros: lista_8_terceros = EQUIPOS_MUNDIAL
+            
+            cols_u = st.columns(4) 
+            c_idx = 0
+            for m_id, slot_key, slot_idx, prefix in slots_terceros_u:
+                key_widget = f"{prefix}{m_id}"
+                current_val = predictions[user_email].get(m_id, {}).get(f"equipo{slot_idx}_user", "No asignado")
+                
+                with cols_u[c_idx % 4]:
+                    seleccion = st.selectbox(f"{p[slot_key]} (Match {m_id}):", ["No asignado"] + EQUIPOS_MUNDIAL, 
+                                             index=0 if current_val == "No asignado" else (["No asignado"] + EQUIPOS_MUNDIAL).index(current_val),
+                                             key=key_widget, disabled=not puede_editar)
+                    if seleccion != current_val:
+                        if m_id not in predictions[user_email]: predictions[user_email][m_id] = {}
+                        predictions[user_email][m_id][f"equipo{slot_idx}_user"] = seleccion if seleccion != "No asignado" else None
+                        save_data(predictions, DB_PREDICTIONS)
+                        st.rerun()
+                c_idx += 1
+            st.divider()
+
+    # Formulario de Pronósticos
     with st.form("form_pronosticos"):
-        st.subheader(f"Partidos")
-        
-        partidos_fase = matches.get(fase_sel, [])
-        if grupo_filtro != "Todos":
-            partidos_fase = [p for p in partidos_fase if p.get("grupo") == grupo_filtro]
-            
         nuevos_pronosticos = {}
-        
-        if not partidos_fase: st.write("No hay partidos en este grupo o fase.")
-            
         for p in partidos_fase:
             m_id = p["id"]
-            st.markdown(f"**{p.get('grupo', '')}** | Fecha: {p['fecha']}")
-            
+            st.markdown(f"**{p.get('grupo', '')}** | {p['fecha']}")
             pred_prev = predictions[user_email].get(m_id, {"goles1": 0, "goles2": 0})
             
+            eq1_name = resolve_user_team(m_id, 1, matches, predictions[user_email], mappings)
+            eq2_name = resolve_user_team(m_id, 2, matches, predictions[user_email], mappings)
+            
             col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
+            with col1: st.write(f"**{eq1_name}**")
+            with col5: st.write(f"**{eq2_name}**")
+            with col2: g1 = st.number_input("G1", value=pred_prev.get("goles1", 0), key=f"g1_{m_id}", disabled=not puede_editar)
+            with col4: g2 = st.number_input("G2", value=pred_prev.get("goles2", 0), key=f"g2_{m_id}", disabled=not puede_editar)
             
-            # AUTOMATIZACIÓN: Usamos el árbol predictivo del usuario apoyado por los cálculos automáticos de la base
-            eq1_name = resolve_user_team(m_id, 1, matches, predictions[user_email], mappings) if fase_sel != "fase_grupos" else p['equipo1']
-            eq2_name = resolve_user_team(m_id, 2, matches, predictions[user_email], mappings) if fase_sel != "fase_grupos" else p['equipo2']
-            
-            with col1: st.write(f"<h5 style='text-align: right; color:#00ff87;'>{eq1_name}</h5>", unsafe_allow_html=True)
-            with col5: st.write(f"<h5 style='color:#00ff87;'>{eq2_name}</h5>", unsafe_allow_html=True)
-            
-            nuevos_pronosticos[m_id] = {}
-
-            with col2: g1 = st.number_input("Goles Eq1", min_value=0, max_value=15, value=pred_prev.get("goles1", 0), key=f"g1_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
-            with col3: st.markdown("<h4 style='text-align: center;'>vs</h4>", unsafe_allow_html=True)
-            with col4: g2 = st.number_input("Goles Eq2", min_value=0, max_value=15, value=pred_prev.get("goles2", 0), key=f"g2_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
-            
-            clasif_ui = None
-            if fase_sel != "fase_grupos":
-                st.write("<div style='text-align: center;'><small style='color: gray;'>Desempate: ¿Quién clasifica? (OBLIGATORIO si pusiste empate arriba)</small></div>", unsafe_allow_html=True)
-                col_esp1, col_penales, col_esp2 = st.columns([1, 2, 1])
-                with col_penales:
-                    opciones_clasif_txt = ["- Selecciona quién avanza -", eq1_name, eq2_name]
-                    opciones_clasif_val = [None, "equipo1", "equipo2"]
-                    
-                    prev_clasif = pred_prev.get("clasifica")
-                    idx_clasif = opciones_clasif_val.index(prev_clasif) if prev_clasif in opciones_clasif_val else 0
-                    
-                    clasif_ui = st.selectbox("Penales", opciones_clasif_txt, index=idx_clasif, key=f"clasif_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
-
+            nuevos_pronosticos[m_id] = {"goles1": g1, "goles2": g2, "ganador": determinar_ganador(g1, g2)}
             st.divider()
-            
-            ganador_calc = determinar_ganador(g1, g2)
-            clasifica_final = None
-            
-            if fase_sel != "fase_grupos":
-                if g1 > g2: clasifica_final = "equipo1"
-                elif g2 > g1: clasifica_final = "equipo2"
-                else: clasifica_final = opciones_clasif_val[opciones_clasif_txt.index(clasif_ui)]
-                
-            nuevos_pronosticos[m_id].update({"goles1": g1, "goles2": g2, "ganador": ganador_calc, "clasifica": clasifica_final})
 
-        if puede_editar:
-            if st.form_submit_button("Guardar Pronósticos de Partidos", type="primary"):
-                errores = False
-                if fase_sel != "fase_grupos":
-                    for m_id, p_data in nuevos_pronosticos.items():
-                        if p_data["goles1"] == p_data["goles2"] and p_data["clasifica"] is None:
-                            errores = True
-                            break
-                            
-                if errores:
-                    st.error("⚠️ Tienes uno o más partidos con empate donde no seleccionaste quién clasifica. Revisa y elige un ganador para el desempate antes de guardar.")
-                else:
-                    predictions[user_email].update(nuevos_pronosticos)
-                    save_data(predictions, DB_PREDICTIONS)
-                    st.success("¡Pronósticos guardados correctamente! Tus ganadores han avanzado a la siguiente fase en tu menú.")
-        else:
-             st.form_submit_button("Guardar Pronósticos", disabled=True)
-
+        if puede_editar and st.form_submit_button("Guardar Pronósticos"):
+            predictions[user_email].update(nuevos_pronosticos)
+            save_data(predictions, DB_PREDICTIONS)
+            sync_special_predictions(user_email, predictions, matches, mappings)
+            st.success("Guardado.")
 def mostrar_predicciones_especiales():
     st.header("Mis Equipos Clasificados (Bonos)")
     st.write("Selecciona explícitamente qué países crees que llegarán a cada fase del torneo. ¡Mientras más lejos lleguen tus elegidos, más puntos ganas!")
