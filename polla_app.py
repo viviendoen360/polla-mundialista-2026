@@ -399,13 +399,16 @@ def resolve_admin_team(m_id, slot, matches_dict, mappings):
 
 # Resuelve el equipo leyendo las predicciones DEL USUARIO para que armen su llave
 def resolve_user_team(m_id, slot, matches_dict, user_preds, mappings):
-      p = get_match_by_id(matches_dict, m_id)
+    p = get_match_by_id(matches_dict, m_id)
     if f"origen{slot}" in p:
         origen_id = p[f"origen{slot}"]
         clasifica = user_preds.get(origen_id, {}).get("clasifica")
-        if clasifica == "equipo1": return resolve_user_team(origen_id, 1, matches_dict, user_preds, mappings)
-        elif clasifica == "equipo2": return resolve_user_team(origen_id, 2, matches_dict, user_preds, mappings)
-        else: return "Por Definir" 
+        if clasifica == "equipo1": 
+            return resolve_user_team(origen_id, 1, matches_dict, user_preds, mappings)
+        elif clasifica == "equipo2": 
+            return resolve_user_team(origen_id, 2, matches_dict, user_preds, mappings)
+        else: 
+            return "Por Definir" 
     else:
         base_name = p.get(f"equipo{slot}")
         # Si el cupo le pertenece a un 3ro, prioriza la selección manual
@@ -414,8 +417,10 @@ def resolve_user_team(m_id, slot, matches_dict, user_preds, mappings):
             if user_choice and user_choice != "No asignado":
                 return user_choice
         real_name = p.get(f"equipo{slot}_real")
-        if real_name and real_name != base_name: return real_name
-        if mappings and base_name in mappings: return mappings[base_name]
+        if real_name and real_name != base_name: 
+            return real_name
+        if mappings and base_name in mappings: 
+            return mappings[base_name]
         return base_name
 
 def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, real_goles1, real_goles2, real_ganador):
