@@ -399,7 +399,7 @@ def resolve_admin_team(m_id, slot, matches_dict, mappings):
 
 # Resuelve el equipo leyendo las predicciones DEL USUARIO para que armen su llave
 def resolve_user_team(m_id, slot, matches_dict, user_preds, mappings):
-    p = get_match_by_id(matches_dict, m_id)
+      p = get_match_by_id(matches_dict, m_id)
     if f"origen{slot}" in p:
         origen_id = p[f"origen{slot}"]
         clasifica = user_preds.get(origen_id, {}).get("clasifica")
@@ -407,8 +407,12 @@ def resolve_user_team(m_id, slot, matches_dict, user_preds, mappings):
         elif clasifica == "equipo2": return resolve_user_team(origen_id, 2, matches_dict, user_preds, mappings)
         else: return "Por Definir" 
     else:
-        # Los equipos base (Dieciseisavos) sí se halan de la realidad/cálculo
         base_name = p.get(f"equipo{slot}")
+        # Si el cupo le pertenece a un 3ro, prioriza la selección manual
+        if "3ro" in base_name:
+            user_choice = user_preds.get(m_id, {}).get(f"equipo{slot}_user")
+            if user_choice and user_choice != "No asignado":
+                return user_choice
         real_name = p.get(f"equipo{slot}_real")
         if real_name and real_name != base_name: return real_name
         if mappings and base_name in mappings: return mappings[base_name]
@@ -424,6 +428,61 @@ def calcular_puntos_partido(pred_goles1, pred_goles2, pred_ganador, real_goles1,
     if pred_goles1 == real_goles1 and pred_goles2 == real_goles2 and pred_ganador == real_ganador:
         puntos += 2
     return puntos
+
+# ==========================================
+# AUTO-SINCRONIZACIÓN DE BONOS ESPECIALES
+# ==========================================
+def sync_special_predictions(user_email, predictions, matches, mappings):
+    """Deriva automáticamente a los clasificados desde el árbol predictivo del usuario."""
+    user_preds = predictions.get(user_email, {})
+    specials = load_data(DB_SPECIALS)
+    if user_email not in specials: specials[user_email] = {}
+
+    dieciseisavos, octavos, cuartos, semis = set(), set(), set(), set()
+    campeon, vicecampeon = "", ""
+    invalidos = ["Por Definir", "No asignado"]
+
+    for phase in ["dieciseisavos", "octavos", "cuartos", "semis"]:
+        for p in matches.get(phase, []):
+            e1 = resolve_user_team(p["id"], 1, matches, user_preds, mappings)
+            e2 = resolve_user_team(p["id"], 2, matches, user_preds, mappings)
+            
+            if e1 and e1 not in invalidos and "Grupo" not in e1 and "3ro" not in e1:
+                if phase == "dieciseisavos": dieciseisavos.add(e1)
+                if phase == "octavos": octavos.add(e1)
+                if phase == "cuartos": cuartos.add(e1)
+                if phase == "semis": semis.add(e1)
+                
+            if e2 and e2 not in invalidos and "Grupo" not in e2 and "3ro" not in e2:
+                if phase == "dieciseisavos": dieciseisavos.add(e2)
+                if phase == "octavos": octavos.add(e2)
+                if phase == "cuartos": cuartos.add(e2)
+                if phase == "semis": semis.add(e2)
+
+    for p in matches.get("final", []):
+        m_id = p["id"]
+        e1 = resolve_user_team(m_id, 1, matches, user_preds, mappings)
+        e2 = resolve_user_team(m_id, 2, matches, user_preds, mappings)
+        if e1 and e2 and e1 not in invalidos and e2 not in invalidos:
+            clasifica = user_preds.get(m_id, {}).get("clasifica")
+            ganador = user_preds.get(m_id, {}).get("ganador")
+            
+            if "Grupo" not in e1 and "3ro" not in e1 and "Grupo" not in e2 and "3ro" not in e2:
+                if clasifica == "equipo1" or ganador == "equipo1":
+                    campeon, vicecampeon = e1, e2
+                elif clasifica == "equipo2" or ganador == "equipo2":
+                    campeon, vicecampeon = e2, e1
+
+    specials[user_email].update({
+        "dieciseisavos": list(dieciseisavos)[:32],
+        "octavos": list(octavos)[:16],
+        "cuartos": list(cuartos)[:8],
+        "semis": list(semis)[:4],
+        "campeon": campeon,
+        "vicecampeon": vicecampeon
+    })
+    save_data(specials, DB_SPECIALS)
+
 
 # ==========================================
 # COMPONENTES DE INTERFAZ (UI)
@@ -560,7 +619,7 @@ def mostrar_resultados_oficiales():
 
 def mostrar_pantalla_pronosticos():
     st.header("Mis Pronósticos (Árbol de Partidos)")
-    st.write("Acierta los goles. La app calculará automáticamente quién gana y quién avanza para armar TU propia llave hacia la final.")
+    st.write("Llena tus resultados. A medida que tus ganadores avancen, la pestaña de Bonos se llenará automáticamente.")
     
     matches = load_data(DB_MATCHES)
     settings = load_data(DB_SETTINGS)
@@ -589,87 +648,92 @@ def mostrar_pantalla_pronosticos():
     deadline = DEADLINES.get(deadline_key, ahora + timedelta(days=1))
     puede_editar = ahora <= deadline
     
-    if puede_editar:
-        mensaje_cierre = f"Se cierra el: {deadline.strftime('%Y-%m-%d %H:%M')}"
-    else:
-        mensaje_cierre = f"La fase {FASES_NOMBRES[fase_sel]} está CERRADA para edición."
+    if puede_editar: st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | Se cierra el: {deadline.strftime('%Y-%m-%d %H:%M')}")
+    else: st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | ESTA FASE ESTÁ CERRADA PARA EDICIÓN.")
 
-    st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | {mensaje_cierre}")
+    partidos_fase = matches.get(fase_sel, [])
+    if grupo_filtro != "Todos":
+        partidos_fase = [p for p in partidos_fase if p.get("grupo") == grupo_filtro]
+        
+    if not partidos_fase: 
+        st.write("No hay partidos en este grupo o fase.")
+        return
 
+    # =================================================================
+    # EXCLUSIÓN MUTUA PARA EL USUARIO (SOLO TERCEROS)
+    # =================================================================
+    if fase_sel == "dieciseisavos":
+        slots_terceros_u = []
+        for p in partidos_fase:
+            if "3ro" in p['equipo1']: slots_terceros_u.append((p["id"], "equipo1", 1, "u_dyn1_"))
+            if "3ro" in p['equipo2']: slots_terceros_u.append((p["id"], "equipo2", 2, "u_dyn2_"))
+            
+        if slots_terceros_u:
+            st.subheader("🧩 Asigna a tus Mejores Terceros")
+            lista_8_terceros = [mappings[f"Mejor 3ro ({i})"] for i in range(1, 9) if f"Mejor 3ro ({i})" in mappings]
+            
+            # Si no hay mapeo aún, usamos la lista completa para no romper nada
+            if not lista_8_terceros: lista_8_terceros = EQUIPOS_MUNDIAL
+            
+            equipos_usados_u = set()
+            for m_id, slot_key, slot_idx, prefix in slots_terceros_u:
+                val = st.session_state.get(f"{prefix}{m_id}", predictions[user_email].get(m_id, {}).get(f"equipo{slot_idx}_user"))
+                if val and val != "No asignado": equipos_usados_u.add(val)
+
+            cambios_terceros = False
+            cols_u = st.columns(4) 
+            c_idx = 0
+            
+            for m_id, slot_key, slot_idx, prefix in slots_terceros_u:
+                p = next(match for match in partidos_fase if match["id"] == m_id)
+                current_val = st.session_state.get(f"{prefix}{m_id}", predictions[user_email].get(m_id, {}).get(f"equipo{slot_idx}_user", "No asignado"))
+                
+                opts = ["No asignado"] + [eq for eq in lista_8_terceros if eq not in equipos_usados_u or eq == current_val]
+                
+                with cols_u[c_idx % 4]:
+                    seleccion = st.selectbox(f"{p[slot_key]} (Match {m_id}):", opts, 
+                                             index=opts.index(current_val) if current_val in opts else 0, 
+                                             key=f"{prefix}{m_id}", disabled=not puede_editar)
+                c_idx += 1
+                
+                if seleccion != predictions[user_email].get(m_id, {}).get(f"equipo{slot_idx}_user", "No asignado"):
+                    if m_id not in predictions[user_email]: predictions[user_email][m_id] = {}
+                    predictions[user_email][m_id][f"equipo{slot_idx}_user"] = seleccion if seleccion != "No asignado" else None
+                    cambios_terceros = True
+                    
+            if cambios_terceros:
+                save_data(predictions, DB_PREDICTIONS)
+                st.rerun()
+            st.divider()
+
+    # Formulario de Pronósticos
     with st.form("form_pronosticos"):
-        st.subheader(f"Partidos")
-        
-        partidos_fase = matches.get(fase_sel, [])
-        if grupo_filtro != "Todos":
-            partidos_fase = [p for p in partidos_fase if p.get("grupo") == grupo_filtro]
-            
+        st.subheader(f"Goles y Penales")
         nuevos_pronosticos = {}
-        
-        if not partidos_fase: st.write("No hay partidos en este grupo o fase.")
-            
         for p in partidos_fase:
             m_id = p["id"]
             st.markdown(f"**{p.get('grupo', '')}** | Fecha: {p['fecha']}")
-            
             pred_prev = predictions[user_email].get(m_id, {"goles1": 0, "goles2": 0})
-            
             col1, col2, col3, col4, col5 = st.columns([2, 1, 1, 1, 2])
             
-            # AUTOMATIZACIÓN: Usamos el árbol predictivo del usuario apoyado por los cálculos automáticos de la base
-            eq1_name = resolve_user_team(m_id, 1, matches, predictions[user_email], mappings) if fase_sel != "fase_grupos" else p['equipo1']
-            eq2_name = resolve_user_team(m_id, 2, matches, predictions[user_email], mappings) if fase_sel != "fase_grupos" else p['equipo2']
+            eq1_name = resolve_user_team(m_id, 1, matches, predictions[user_email], mappings)
+            eq2_name = resolve_user_team(m_id, 2, matches, predictions[user_email], mappings)
             
             with col1: st.write(f"<h5 style='text-align: right; color:#00ff87;'>{eq1_name}</h5>", unsafe_allow_html=True)
             with col5: st.write(f"<h5 style='color:#00ff87;'>{eq2_name}</h5>", unsafe_allow_html=True)
             
-            nuevos_pronosticos[m_id] = {}
-
             with col2: g1 = st.number_input("Goles Eq1", min_value=0, max_value=15, value=pred_prev.get("goles1", 0), key=f"g1_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
             with col3: st.markdown("<h4 style='text-align: center;'>vs</h4>", unsafe_allow_html=True)
             with col4: g2 = st.number_input("Goles Eq2", min_value=0, max_value=15, value=pred_prev.get("goles2", 0), key=f"g2_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
             
-            clasif_ui = None
-            if fase_sel != "fase_grupos":
-                st.write("<div style='text-align: center;'><small style='color: gray;'>Desempate: ¿Quién clasifica? (OBLIGATORIO si pusiste empate arriba)</small></div>", unsafe_allow_html=True)
-                col_esp1, col_penales, col_esp2 = st.columns([1, 2, 1])
-                with col_penales:
-                    opciones_clasif_txt = ["- Selecciona quién avanza -", eq1_name, eq2_name]
-                    opciones_clasif_val = [None, "equipo1", "equipo2"]
-                    
-                    prev_clasif = pred_prev.get("clasifica")
-                    idx_clasif = opciones_clasif_val.index(prev_clasif) if prev_clasif in opciones_clasif_val else 0
-                    
-                    clasif_ui = st.selectbox("Penales", opciones_clasif_txt, index=idx_clasif, key=f"clasif_{m_id}", disabled=not puede_editar, label_visibility="collapsed")
-
+            nuevos_pronosticos[m_id] = {"goles1": g1, "goles2": g2, "ganador": determinar_ganador(g1, g2)}
             st.divider()
-            
-            ganador_calc = determinar_ganador(g1, g2)
-            clasifica_final = None
-            
-            if fase_sel != "fase_grupos":
-                if g1 > g2: clasifica_final = "equipo1"
-                elif g2 > g1: clasifica_final = "equipo2"
-                else: clasifica_final = opciones_clasif_val[opciones_clasif_txt.index(clasif_ui)]
-                
-            nuevos_pronosticos[m_id].update({"goles1": g1, "goles2": g2, "ganador": ganador_calc, "clasifica": clasifica_final})
 
-        if puede_editar:
-            if st.form_submit_button("Guardar Pronósticos de Partidos", type="primary"):
-                errores = False
-                if fase_sel != "fase_grupos":
-                    for m_id, p_data in nuevos_pronosticos.items():
-                        if p_data["goles1"] == p_data["goles2"] and p_data["clasifica"] is None:
-                            errores = True
-                            break
-                            
-                if errores:
-                    st.error("⚠️ Tienes uno o más partidos con empate donde no seleccionaste quién clasifica. Revisa y elige un ganador para el desempate antes de guardar.")
-                else:
-                    predictions[user_email].update(nuevos_pronosticos)
-                    save_data(predictions, DB_PREDICTIONS)
-                    st.success("¡Pronósticos guardados correctamente! Tus ganadores han avanzado a la siguiente fase en tu menú.")
-        else:
-             st.form_submit_button("Guardar Pronósticos", disabled=True)
+        if puede_editar and st.form_submit_button("Guardar Pronósticos", type="primary"):
+            predictions[user_email].update(nuevos_pronosticos)
+            save_data(predictions, DB_PREDICTIONS)
+            sync_special_predictions(user_email, predictions, matches, mappings)
+            st.success("¡Guardado! Tus equipos clasificados se actualizaron automáticamente.")
 
 def mostrar_predicciones_especiales():
     st.header("Mis Equipos Clasificados (Bonos)")
