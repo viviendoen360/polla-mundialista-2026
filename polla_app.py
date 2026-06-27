@@ -400,6 +400,12 @@ def resolve_admin_team(m_id, slot, matches_dict, mappings):
 # Resuelve el equipo leyendo las predicciones DEL USUARIO para que armen su llave
 def resolve_user_team(m_id, slot, matches_dict, user_preds, mappings):
     p = get_match_by_id(matches_dict, m_id)
+    # 1. Prioridad: Si hay una elección manual del usuario, úsala
+    user_choice = user_preds.get(m_id, {}).get(f"equipo{slot}_user")
+    if user_choice and user_choice != "No asignado":
+        return user_choice
+        
+    # 2. Si no hay elección manual, sigue con la lógica normal
     if f"origen{slot}" in p:
         origen_id = p[f"origen{slot}"]
         clasifica = user_preds.get(origen_id, {}).get("clasifica")
@@ -407,7 +413,6 @@ def resolve_user_team(m_id, slot, matches_dict, user_preds, mappings):
         elif clasifica == "equipo2": return resolve_user_team(origen_id, 2, matches_dict, user_preds, mappings)
         else: return "Por Definir" 
     else:
-        # Los equipos base (Dieciseisavos) sí se halan de la realidad/cálculo
         base_name = p.get(f"equipo{slot}")
         real_name = p.get(f"equipo{slot}_real")
         if real_name and real_name != base_name: return real_name
@@ -595,7 +600,30 @@ def mostrar_pantalla_pronosticos():
         mensaje_cierre = f"La fase {FASES_NOMBRES[fase_sel]} está CERRADA para edición."
 
     st.info(f"Viendo: {FASES_NOMBRES[fase_sel]} | {mensaje_cierre}")
-
+# Bloque de Selectores Manuales para 16avos
+    if fase_sel == "dieciseisavos":
+        st.subheader("🧩 Asigna a tus clasificados (Manual)")
+        cols = st.columns(4)
+        c_idx = 0
+        for p in partidos_fase:
+            for slot in [1, 2]:
+                if "3ro" in p[f"equipo{slot}"]:
+                    m_id = p["id"]
+                    key_user = f"u_sel_{m_id}_{slot}"
+                    current_val = predictions[user_email].get(m_id, {}).get(f"equipo{slot}_user", "No asignado")
+                    
+                    with cols[c_idx % 4]:
+                        seleccion = st.selectbox(f"Match {m_id} - Slot {slot}:", ["No asignado"] + EQUIPOS_MUNDIAL, 
+                                                 index=["No asignado"] + EQUIPOS_MUNDIAL.index(current_val) if current_val in EQUIPOS_MUNDIAL else 0,
+                                                 key=key_user)
+                        
+                        if seleccion != current_val:
+                            if m_id not in predictions[user_email]: predictions[user_email][m_id] = {}
+                            predictions[user_email][m_id][f"equipo{slot}_user"] = seleccion
+                            save_data(predictions, DB_PREDICTIONS)
+                            st.rerun()
+                    c_idx += 1
+        st.divider()
     with st.form("form_pronosticos"):
         st.subheader(f"Partidos")
         
