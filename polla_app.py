@@ -1150,28 +1150,25 @@ def admin_sandbox_resultados():
 def admin_gestion_fases():
     st.header("⚙️ Gestión de Fases y Clasificados")
     
-    # --- INICIO DE BOTÓN TEMPORAL ---
+    # 1. BOTÓN TEMPORAL DE ACTUALIZACIÓN DE 16AVOS (que ya habíamos creado)
     if st.button("Actualizar llaves de 16avos (Seguro)"):
         matches = load_data(DB_MATCHES)
         nuevos_partidos = get_initial_matches()
-        
-        # Sobrescribimos SOLO las fases eliminatorias. La fase de grupos queda intacta.
         for fase in ["dieciseisavos", "octavos", "cuartos", "semis", "final"]:
             matches[fase] = nuevos_partidos[fase]
-            
         save_data(matches, DB_MATCHES)
         st.success("¡Base de datos actualizada con la nueva estructura oficial!")
-    # --- FIN DE BOTÓN TEMPORAL ---
 
-    settings = load_data(DB_SETTINGS)
-    # ... (Aquí continúa tu código normal con el with st.form("form_fases"): etc.)
-    st.header("⚙️ Gestión de Fases y Clasificados")
-    
     settings = load_data(DB_SETTINGS)
     
     with st.form("form_fases"):
         st.subheader("Configuración Visual")
-        nueva_fase = st.selectbox("Fase Activa Inicial por Defecto (Al abrir la app)", 
+        
+        # 2. INTERRUPTOR DE BLOQUEO MANUAL
+        estado_bloqueo = st.checkbox("Bloquear edición para todos los usuarios", 
+                                     value=settings.get("bloqueo_edicion", True))
+        
+        nueva_fase = st.selectbox("Fase Activa Inicial por Defecto", 
                                  list(FASES_NOMBRES.keys()),
                                  index=list(FASES_NOMBRES.keys()).index(settings.get("fase_actual", "fase_grupos")),
                                  format_func=lambda x: FASES_NOMBRES[x])
@@ -1193,7 +1190,9 @@ def admin_gestion_fases():
             c_oficial = st.selectbox("🏆 Campeón Oficial", [""] + EQUIPOS_MUNDIAL, index=idx_c+1)
             v_oficial = st.selectbox("🥈 Vicecampeón Oficial", [""] + EQUIPOS_MUNDIAL, index=idx_v+1)
 
+        # 3. GUARDADO DEL FORMULARIO (Incluyendo el bloqueo)
         if st.form_submit_button("Guardar Clasificados Oficiales", type="primary"):
+            settings["bloqueo_edicion"] = estado_bloqueo
             settings["fase_actual"] = nueva_fase
             settings["dieciseisavos_oficial"] = dieciseisavos_oficial
             settings["octavos_oficial"] = oct_oficial
@@ -1202,7 +1201,7 @@ def admin_gestion_fases():
             settings["campeon_oficial"] = c_oficial if c_oficial != "" else None
             settings["vice_oficial"] = v_oficial if v_oficial != "" else None
             save_data(settings, DB_SETTINGS)
-            st.success("Configuración actualizada.")
+            st.success("Configuración y estado de bloqueo guardados.")
 
 def admin_sincronizar_api():
     st.header("🔄 Sincronización Maestra (API)")
