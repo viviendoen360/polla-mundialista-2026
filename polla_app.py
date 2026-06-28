@@ -558,6 +558,60 @@ def mostrar_resultados_oficiales():
             
         st.divider()
 
+# ==========================================
+# AUTO-SINCRONIZACIÓN DE BONOS ESPECIALES
+# ==========================================
+def sync_special_predictions(user_email, predictions, matches, mappings):
+    """Deriva automáticamente a los clasificados desde el árbol predictivo del usuario."""
+    user_preds = predictions.get(user_email, {})
+    specials = load_data(DB_SPECIALS)
+    if user_email not in specials: specials[user_email] = {}
+
+    dieciseisavos, octavos, cuartos, semis = set(), set(), set(), set()
+    campeon, vicecampeon = "", ""
+    invalidos = ["Por Definir", "No asignado"]
+
+    for phase in ["dieciseisavos", "octavos", "cuartos", "semis"]:
+        for p in matches.get(phase, []):
+            e1 = resolve_user_team(p["id"], 1, matches, user_preds, mappings)
+            e2 = resolve_user_team(p["id"], 2, matches, user_preds, mappings)
+            
+            if e1 and e1 not in invalidos and "Grupo" not in e1 and "3ro" not in e1:
+                if phase == "dieciseisavos": dieciseisavos.add(e1)
+                if phase == "octavos": octavos.add(e1)
+                if phase == "cuartos": cuartos.add(e1)
+                if phase == "semis": semis.add(e1)
+                
+            if e2 and e2 not in invalidos and "Grupo" not in e2 and "3ro" not in e2:
+                if phase == "dieciseisavos": dieciseisavos.add(e2)
+                if phase == "octavos": octavos.add(e2)
+                if phase == "cuartos": cuartos.add(e2)
+                if phase == "semis": semis.add(e2)
+
+    for p in matches.get("final", []):
+        m_id = p["id"]
+        e1 = resolve_user_team(m_id, 1, matches, user_preds, mappings)
+        e2 = resolve_user_team(m_id, 2, matches, user_preds, mappings)
+        if e1 and e2 and e1 not in invalidos and e2 not in invalidos:
+            clasifica = user_preds.get(m_id, {}).get("clasifica")
+            ganador = user_preds.get(m_id, {}).get("ganador")
+            
+            if "Grupo" not in e1 and "3ro" not in e1 and "Grupo" not in e2 and "3ro" not in e2:
+                if clasifica == "equipo1" or ganador == "equipo1":
+                    campeon, vicecampeon = e1, e2
+                elif clasifica == "equipo2" or ganador == "equipo2":
+                    campeon, vicecampeon = e2, e1
+
+    specials[user_email].update({
+        "dieciseisavos": list(dieciseisavos)[:32],
+        "octavos": list(octavos)[:16],
+        "cuartos": list(cuartos)[:8],
+        "semis": list(semis)[:4],
+        "campeon": campeon,
+        "vicecampeon": vicecampeon
+    })
+    save_data(specials, DB_SPECIALS)
+
 def mostrar_pantalla_pronosticos():
     st.header("Mis Pronósticos (Árbol de Partidos)")
     
