@@ -685,8 +685,11 @@ def mostrar_predicciones_especiales():
     st.header("Mis Equipos Clasificados (Bonos)")
     st.write("Selecciona explícitamente qué países crees que llegarán a cada fase del torneo. ¡Mientras más lejos lleguen tus elegidos, más puntos ganas!")
     
-    ahora = datetime.now()
-    puede_editar = ahora <= DEADLINES["eliminatorias"]
+# --- INTERRUPTOR MAESTRO ---
+    settings = load_data(DB_SETTINGS)
+    bloqueado = settings.get("bloqueo_edicion", True)
+    puede_editar = not bloqueado
+    # ---------------------------
     
     if puede_editar:
         st.info(f"Podrás editar estas listas hasta el: {DEADLINES['eliminatorias'].strftime('%Y-%m-%d %H:%M')}")
