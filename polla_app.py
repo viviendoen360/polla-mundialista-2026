@@ -642,19 +642,44 @@ def mostrar_pantalla_pronosticos():
             c1, c2, c3 = st.columns([2, 1, 2])
             with c1: st.write(f"**{eq1}**")
             with c3: st.write(f"**{eq2}**")
+            
             # --- INPUTS BLOQUEADOS SI ADMIN BLOQUEÓ ---
             g1 = st.number_input("G1", value=predictions[user_email].get(m_id, {}).get("goles1", 0), key=f"g1_{m_id}", disabled=not puede_editar)
             g2 = st.number_input("G2", value=predictions[user_email].get(m_id, {}).get("goles2", 0), key=f"g2_{m_id}", disabled=not puede_editar)
             
-            nuevos_pronosticos[m_id] = {"goles1": g1, "goles2": g2, "ganador": determinar_ganador(g1, g2)}
+            ganador_final = None
+            # --- NUEVA LÓGICA DE EMPATE PARA ELIMINATORIAS ---
+            if fase_sel != "fase_grupos":
+                prev_clasifica = predictions[user_email].get(m_id, {}).get("clasifica", "equipo1")
+                idx_clasifica = 0 if prev_clasifica == "equipo1" else 1
+                
+                st.caption("🎯 En caso de Empate (Penales), ¿quién avanza?")
+                sel_clasifica = st.radio("Avanza:", [eq1, eq2], index=idx_clasifica, key=f"clas_{m_id}", horizontal=True, disabled=not puede_editar, label_visibility="collapsed")
+                
+                # Determinación inteligente: Los goles mandan, si hay empate, manda el selector
+                if g1 > g2: ganador_final = "equipo1"
+                elif g2 > g1: ganador_final = "equipo2"
+                else: ganador_final = "equipo1" if sel_clasifica == eq1 else "equipo2"
+
+            # Guardamos los resultados
+            nuevos_pronosticos[m_id] = {
+                "goles1": g1, 
+                "goles2": g2, 
+                "ganador": determinar_ganador(g1, g2)
+            }
+            
+            # Si es eliminatoria, guardamos explícitamente quién pasa a la siguiente ronda
+            if fase_sel != "fase_grupos":
+                nuevos_pronosticos[m_id]["clasifica"] = ganador_final
+
             st.divider()
 
-        # Botón de guardar bloqueado
+        # Botón de guardar bloqueado si la edición está cerrada
         if puede_editar and st.form_submit_button("Guardar Pronósticos"):
             predictions[user_email].update(nuevos_pronosticos)
             save_data(predictions, DB_PREDICTIONS)
             sync_special_predictions(user_email, predictions, matches, mappings)
-            st.success("Guardado.")
+            st.success("Guardado. El árbol de partidos se ha actualizado.")
 
 def mostrar_predicciones_especiales():
     st.header("Mis Equipos Clasificados (Bonos)")
